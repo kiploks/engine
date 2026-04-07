@@ -37,8 +37,9 @@ This sets every workspace `package.json` `version` and internal `@kiploks/engine
 
 After changing `VERSION`, commit, then sync, then rebuild and run checks before publishing.
 
-## Publish workflow (later)
+## CI and publish (GitHub Actions)
 
-- GitHub Actions on **this** repo (CI, npm publish).
-- npm org scope `@kiploks` and access tokens.
-- GitHub Release notes and tags (optional).
+- **CI** (`.github/workflows/ci.yml`): on every PR and push to `main` - `npm ci`, `npm run build`, `npm run engine:validate`.
+- **Release** (`.github/workflows/release.yml`): on push of tag `v*` (e.g. `v0.2.0`). The `VERSION` file must equal the tag without the `v` prefix (`0.2.0`). After bumping `VERSION`, run `npm run sync-versions`, commit, merge, then create and push the tag on that commit.
+- **npm:** publishing uses **Trusted Publishing** (OIDC) from this workflow file - no long-lived `NPM_TOKEN` in GitHub. Each `@kiploks/engine-*` package on npmjs.com must list this workflow under Trusted Publisher (filename must match: `release.yml`).
+- Optional: create a **GitHub Release** from the tag for notes; it does not affect npm publish.

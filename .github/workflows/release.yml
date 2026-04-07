@@ -1,0 +1,57 @@
+# Publishes @kiploks/engine-* to npm via Trusted Publishing (OIDC).
+# Trigger: push tag v* (e.g. v0.2.0). VERSION file must match the tag (0.2.0).
+# Configure the same workflow filename on npmjs.com for each package.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      # Trusted publishing requires npm CLI >= 11.5.1 (see npm trusted-publishers docs).
+      - name: Ensure npm for OIDC
+        run: npm install -g npm@^11.5.1
+
+      - name: Verify VERSION matches tag
+        run: |
+          set -euo pipefail
+          VER=$(tr -d '[:space:]' < VERSION)
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$VER" != "$TAG" ]; then
+            echo "::error::VERSION file ($VER) must match git tag (${GITHUB_REF_NAME} -> $TAG). Run sync-versions after bumping VERSION."
+            exit 1
+          fi
+          echo "VERSION=$VER matches tag ${GITHUB_REF_NAME}"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build packages
+        run: npm run build
+
+      - name: Validate before publish
+        run: npm run engine:validate
+
+      - name: Publish to npm (workspaces)
+        run: |
+          npm publish -w @kiploks/engine-contracts \
+            -w @kiploks/engine-core \
+            -w @kiploks/engine-adapters \
+            -w @kiploks/engine-cli \
+            -w @kiploks/engine-test-vectors

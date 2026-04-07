@@ -5,6 +5,8 @@
 
 Deterministic **walk-forward analysis** and backtest validation engine for algorithmic trading strategies - as **TypeScript npm packages** under **Apache 2.0**.
 
+**Browse the full docs on the web:** **[kiploks.com/open-engine](https://kiploks.com/open-engine)** (same Markdown as in `docs/` below).
+
 **New here?** Read **[`docs/ENTRYPOINTS.md`](docs/ENTRYPOINTS.md)** first — it maps **which function to call** (`analyze`, `analyzeFromTrades`, `analyzeFromWindows`, CSV adapters, `mapPayloadToUnified`) and what each expects.
 
 **Main repository:** [github.com/kiploks/engine](https://github.com/kiploks/engine)

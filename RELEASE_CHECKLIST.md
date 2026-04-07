@@ -36,6 +36,8 @@ See **[`docs/OSS_PUBLIC_REPO_SYNC.md`](docs/OSS_PUBLIC_REPO_SYNC.md)** and root 
 npm run sync-versions
 ```
 
+Then merge to `main`, create an annotated tag `vX.Y.Z` matching `VERSION`, and push the tag. GitHub Actions **release.yml** publishes to npm (Trusted Publishing).
+
 ## 4. Optional follow-ups
 
 - Add CI that fails when markdown references removed types (future).
