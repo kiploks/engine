@@ -26,6 +26,24 @@ describe("computeAnalyzeCardSummary", () => {
     expect(summary.verdict).toBe("ROBUST");
     expect(summary.pairTimeframe).toBe("BTC/USDT | 1h");
     expect(summary.exchange).toBe("binance");
+    expect(summary.maxDrawdownPct).toBeNull();
+    expect(summary.winRate).toBeNull();
+    expect(summary.recoveryFactor).toBeNull();
+  });
+
+  it("pulls max drawdown, win rate, and recovery factor from backtest results when present", () => {
+    const data = baseData();
+    (data as unknown as Record<string, unknown>).backtestResult = {
+      results: {
+        max_drawdown: 0.154,
+        win_rate: 42,
+        recovery_factor: 1.25,
+      },
+    };
+    const summary = computeAnalyzeCardSummary(data as TestResultData);
+    expect(summary.maxDrawdownPct).toBeCloseTo(15.4, 5);
+    expect(summary.winRate).toBeCloseTo(0.42, 5);
+    expect(summary.recoveryFactor).toBeCloseTo(1.25, 5);
   });
 
   it("falls back to FAIL on weak robustness/wfe/netEdge", () => {

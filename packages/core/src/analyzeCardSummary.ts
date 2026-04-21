@@ -20,12 +20,71 @@ export interface AnalyzeCardSummaryRow {
   testPeriod: string | null;
   diagnosis: string | null;
   exchange: string | null;
+  /** Max drawdown as a positive percentage for UI (e.g. 15.4 means 15.4%). */
+  maxDrawdownPct: number | null;
+  /** Win rate in 0–1 when available from backtest results. */
+  winRate: number | null;
+  recoveryFactor: number | null;
 }
 
 function toNum(v: unknown): number | null {
   if (v == null) return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
+}
+
+function pickResults(data: TestResultData): Record<string, unknown> | null {
+  const d = data as Record<string, unknown>;
+  const br = (d.backtestResult ?? d.backtest) as Record<string, unknown> | undefined;
+  if (br && typeof br === "object") {
+    const r = (br.results ?? br.result) as Record<string, unknown> | undefined;
+    if (r && typeof r === "object") return r;
+  }
+  const top = d.results as Record<string, unknown> | undefined;
+  if (top && typeof top === "object") return top;
+  return null;
+}
+
+/** Normalize win rate to 0–1 (Freqtrade may send percent 0–100). */
+function normalizeWinRate(raw: number | null): number | null {
+  if (raw == null || !Number.isFinite(raw)) return null;
+  if (raw > 1 && raw <= 100) return raw / 100;
+  if (raw > 100 || raw < 0) return null;
+  return raw;
+}
+
+/**
+ * Max drawdown as positive display percent (15.4 => 15.4%).
+ * Accepts decimal fraction (0.154) or already-percent (15.4).
+ */
+function normalizeMaxDrawdownDisplayPct(raw: number | null): number | null {
+  if (raw == null || !Number.isFinite(raw)) return null;
+  const v = Math.abs(raw);
+  if (v <= 1) return v * 100;
+  return v;
+}
+
+function extractBacktestListMetrics(data: TestResultData): {
+  maxDrawdownPct: number | null;
+  winRate: number | null;
+  recoveryFactor: number | null;
+} {
+  const results = pickResults(data);
+  if (!results) return { maxDrawdownPct: null, winRate: null, recoveryFactor: null };
+
+  const mdRaw = toNum(
+    results.max_drawdown ?? results.maxDrawdown ?? results.max_drawdown_abs,
+  );
+  const maxDrawdownPct = normalizeMaxDrawdownDisplayPct(mdRaw);
+
+  const wrRaw = toNum(results.win_rate ?? results.winrate ?? results.win_rate_pct);
+  const winRate = normalizeWinRate(wrRaw);
+
+  const recoveryFactor = toNum(
+    results.recovery_factor ?? results.recoveryFactor ?? results.recovery,
+  );
+
+  return { maxDrawdownPct, winRate, recoveryFactor };
 }
 
 function testPeriodMonths(start?: string, end?: string): number | null {
@@ -106,6 +165,8 @@ export function computeAnalyzeCardSummary(data: TestResultData): AnalyzeCardSumm
       ? strategy.exchange.trim()
       : null;
 
+  const { maxDrawdownPct, winRate, recoveryFactor } = extractBacktestListMetrics(data);
+
   return {
     verdict,
     robustnessScore,
@@ -119,6 +180,9 @@ export function computeAnalyzeCardSummary(data: TestResultData): AnalyzeCardSumm
     testPeriod,
     diagnosis,
     exchange,
+    maxDrawdownPct,
+    winRate,
+    recoveryFactor,
   };
 }
 

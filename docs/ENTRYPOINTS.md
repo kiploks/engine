@@ -148,7 +148,7 @@ Optional **`equityCurve`** on the input can help unlock benchmark-related paths 
 
 ## Troubleshooting: `available: false` and warnings
 
-A block with **`available: false`** is **not a crash** — it means the engine **refuses to fake** that block because required inputs are missing. Read **`reason`** on the block (`KiploksUnavailableReason` in [`packages/contracts/src/errors.ts`](../packages/contracts/src/errors.ts)).
+A block with **`available: false`** is **not a crash** - it means the engine **refuses to fake** that block because required inputs are missing. Read **`reason`** on the block (`KiploksUnavailableReason` in [`packages/contracts/src/errors.ts`](../packages/contracts/src/errors.ts)).
 
 For **behavioral cautions** (low trade count, low window count, weak p-value, etc.), see **`warnings[]`** on the result and the full **[`ERROR_CATALOG.md`](ERROR_CATALOG.md)**.
 
@@ -167,8 +167,8 @@ When contracts change, **this file can go stale**. Prefer:
 
 ## See also
 
-- **[`OPEN_CORE_INTEGRATION_PRINCIPLES.md`](OPEN_CORE_INTEGRATION_PRINCIPLES.md)** — design principles and `runEverything()`.  
-- **[`examples-map-payload-to-unified.md`](examples-map-payload-to-unified.md)** — `mapPayloadToUnified` and CSV-first flow.  
-- **[`examples/README.md`](examples/README.md)** — step-by-step examples.  
-- **[`ERROR_CATALOG.md`](ERROR_CATALOG.md)** — warning and error codes.  
-- **[`MONTE_CARLO_SIMULATION_IMPLEMENTATION.md`](MONTE_CARLO_SIMULATION_IMPLEMENTATION.md)** — path MC vs window bootstrap index.
+- **[`OPEN_CORE_INTEGRATION_PRINCIPLES.md`](OPEN_CORE_INTEGRATION_PRINCIPLES.md)** - design principles and `runEverything()`.  
+- **[`examples-map-payload-to-unified.md`](examples-map-payload-to-unified.md)** - `mapPayloadToUnified` and CSV-first flow.  
+- **[`examples/README.md`](examples/README.md)** - step-by-step examples.  
+- **[`ERROR_CATALOG.md`](ERROR_CATALOG.md)** - warning and error codes.  
+- **[`MONTE_CARLO_SIMULATION_IMPLEMENTATION.md`](MONTE_CARLO_SIMULATION_IMPLEMENTATION.md)** - path MC vs window bootstrap index.

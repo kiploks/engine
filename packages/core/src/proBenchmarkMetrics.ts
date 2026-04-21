@@ -51,7 +51,7 @@ export interface ProBenchmarkMetricsLike {
   profitableWindowsRatio?: number;
   /** Quick Win: true when sign(mean IS) === sign(mean OOS); false = red flag. */
   oosIsTrendMatch?: boolean;
-  /** True when WFA window count < 2; retention/degradation/WFE should show as "—" with tooltip in UI. */
+  /** True when WFA window count < 2; retention/degradation/WFE should show as "-" with tooltip in UI. */
   insufficientWindowsWarning?: boolean;
   /** Quick Win: three explicit buckets [A] OOS equity, [B] WFA period-level, [C] full backtest. */
   benchmarkMetricsBuckets?: BenchmarkMetricsBucketsLike;
@@ -399,7 +399,7 @@ export function fillProMetricsFromWfaPeriods(
     .filter((v) => Number.isFinite(v)) as number[];
 
   if (!skipMetricDefinitionFields) {
-    // When < 2 windows, do not set retention/WFE (not enough for ratio); UI shows "—" with tooltip.
+    // When < 2 windows, do not set retention/WFE (not enough for ratio); UI shows "-" with tooltip.
     if (periods.length < 2) {
       merged.oosRetention = undefined;
       merged.wfeDistribution = undefined;

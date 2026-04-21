@@ -51,6 +51,7 @@ import {
   computeFullBacktestMetrics,
   computeOOSMetricsFromTrades,
   mapPayloadRiskToOOSMetrics,
+  wfaRowsForMetrics,
 } from "./canonicalMetrics";
 import {
   computeProBenchmarkFromBacktest,
@@ -488,14 +489,17 @@ export function buildTestResultDataFromUnified(
     config: config as Record<string, unknown>,
     benchmarkComparison: bcForCanonical ?? undefined,
   });
-  const oosMetrics =
-    hasOosTrades
-      ? computeOOSMetricsFromTrades(oosTrades as import("./riskAnalysis").OosTradeLike[], initialBalance)
-      : (payloadRisk && typeof payloadRisk === "object"
-          ? mapPayloadRiskToOOSMetrics(payloadRisk as Record<string, unknown>, initialBalance)
-          : (wfaRawObj && Array.isArray(wfaRawObj.periods) && (wfaRawObj.periods as unknown[]).length > 0
-              ? aggregateOOSFromWFAWindows(wfaRawObj.periods as Record<string, unknown>[], initialBalance)
-              : null));
+  const wfaRows =
+    wfaRawObj && typeof wfaRawObj === "object"
+      ? wfaRowsForMetrics(wfaRawObj as Record<string, unknown>)
+      : [];
+  const oosMetrics = hasOosTrades
+    ? computeOOSMetricsFromTrades(oosTrades as import("./riskAnalysis").OosTradeLike[], initialBalance)
+    : payloadRisk && typeof payloadRisk === "object"
+      ? mapPayloadRiskToOOSMetrics(payloadRisk as Record<string, unknown>, initialBalance)
+      : wfaRows.length > 0
+        ? aggregateOOSFromWFAWindows(wfaRows, initialBalance)
+        : null;
 
   // Layer 2.5: canonical WFE (median), OOS Retention, Performance Degradation (wfaWindowMetrics built earlier for single-source)
   let wfeResult: ReturnType<typeof computeWFEMetric_v2> | null = null;
@@ -1637,6 +1641,7 @@ export function buildTestResultDataFromUnified(
     riskAnalysis: result.riskAnalysis,
     parameterSensitivity: result.parameterSensitivity,
     turnoverAndCostDrag: result.turnoverAndCostDrag,
+    proBenchmarkMetrics: result.proBenchmarkMetrics,
     verdictPayload,
     strategyActionPlanPrecomputed,
   });

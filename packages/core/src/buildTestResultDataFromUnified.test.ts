@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildTestResultDataFromUnified } from "./buildTestResultDataFromUnified";
 import { runProfessionalWfa } from "./wfaProfessional";
+import { validateReportInvariants } from "./validateReportInvariants";
 
 function makePayload(overrides: Record<string, unknown> = {}) {
   return {
@@ -110,10 +111,24 @@ describe("buildTestResultDataFromUnified", () => {
     expect(out?.verdictPayload).toBeDefined();
   });
 
-  it("produces integrity fields in final report", () => {
-    const out = buildTestResultDataFromUnified(makePayload() as never, "r1");
+  it("Layer 2.5 uses WFA windows when periods absent (OOS rows + pro sumOos + invariants)", () => {
+    const wfaOnlyWindows = {
+      windows: [
+        { optimizationReturn: 0.12, validationReturn: 0.08, startDate: "2024-01-01", endDate: "2024-04-30" },
+        { optimizationReturn: 0.1, validationReturn: 0.06, startDate: "2024-05-01", endDate: "2024-08-31" },
+        { optimizationReturn: 0.08, validationReturn: 0.04, startDate: "2024-09-01", endDate: "2024-12-31" },
+      ],
+      failedWindows: { count: 0, total: 3 },
+    };
+    const out = buildTestResultDataFromUnified(
+      makePayload({ walkForwardAnalysis: wfaOnlyWindows, oos_trades: [] }) as never,
+      "r1",
+    );
     expect(out).not.toBeNull();
-    expect("integrityIssues" in (out as Record<string, unknown>)).toBe(true);
+    const pro = out?.proBenchmarkMetrics as { sumOos?: number } | undefined;
+    expect(pro?.sumOos).toBeCloseTo(0.08 + 0.06 + 0.04, 8);
+    const inv = validateReportInvariants(out as never);
+    expect(inv.ok).toBe(true);
   });
 
   it("marks robustness as dataQuality-blocked on insufficient sample", () => {

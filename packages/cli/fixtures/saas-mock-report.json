@@ -1,0 +1,1027 @@
+{
+  "strategy": {
+    "name": "EMA-RSI Momentum",
+    "version": "v2.1",
+    "symbol": "BTC/USDT",
+    "timeframe": "5m",
+    "exchange": "Binance",
+    "testPeriodStart": "2021-01-01",
+    "testPeriodEnd": "2024-12-31",
+    "totalConfigurations": 12480,
+    "parametersCount": 6
+  },
+  "parametersAndRunSettings": {
+    "runId": "24dc34cc-6a4f-4e52-bd12-c646bd0fa72b",
+    "date": "2026-01-22",
+    "dataSource": "Binance (spot)",
+    "dataVersionHash": "7f8a1c3d...",
+    "strategySettings": {
+      "emaFast": 7,
+      "emaSlow": 45,
+      "rsiPeriod": 14,
+      "rsiOverbought": 70,
+      "rsiOversold": 30
+    },
+    "analysisSettings": {
+      "timeframe": "5m",
+      "inSampleStart": "2021-01-01",
+      "inSampleEnd": "2023-06-30",
+      "outOfSampleStart": "2023-07-01",
+      "outOfSampleEnd": "2024-12-31",
+      "wfaWindows": 12,
+      "optimizationMethod": "Grid search",
+      "parameterGridSize": "6k"
+    },
+    "executionAndCosts": {
+      "slippage": "0.10%",
+      "commission": "0.10%",
+      "orderType": "Market"
+    },
+    "validationAndBiasControls": {
+      "lookAheadBiasCheck": "PASSED",
+      "survivorshipBias": "CHECKED",
+      "multipleTestingCorrection": "Holm-Bonferroni"
+    }
+  },
+  "decisionSummary": {
+    "verdict": "ROBUST",
+    "confidence": 0.82,
+    "riskLevel": "Medium",
+    "deploymentReadiness": true,
+    "recommendedAllocation": "$25k-$50k",
+    "positiveFlags": {
+      "simple": [
+        "POSITIVE_WFA_STRONG",
+        "POSITIVE_PARAM_STABLE"
+      ],
+      "pro": [
+        "POSITIVE_OVERFIT_LOW"
+      ],
+      "inst": [
+        "POSITIVE_MONTE_CARLO_STABLE"
+      ]
+    },
+    "riskFlags": {
+      "simple": [
+        "RISK_LOW_VOL_REGIME"
+      ],
+      "pro": [
+        "RISK_CAPACITY_LIMITED"
+      ],
+      "inst": [
+        "RISK_LOW_VOL_REGIME"
+      ]
+    }
+  },
+  "benchmarkComparison": {
+    "strategyCAGR": 38,
+    "btcCAGR": 26,
+    "excessReturn": 12,
+    "informationRatio": 0.84,
+    "correlationToBTC": 0.42,
+    "interpretation": [
+      "Strategy generates positive alpha",
+      "Not a disguised long-only exposure",
+      "Provides diversification benefit"
+    ]
+  },
+  "proBenchmarkMetrics": {
+    "benchmarkMetricsBuckets": {
+      "oosEquityBased": {
+        "source": "oos_equity_fixture",
+        "oosSharpe": 1.62,
+        "oosCalmar": 2.1,
+        "oosMaxDrawdown": -0.14,
+        "note": "CLI demo fixture"
+      },
+      "wfaPeriodLevel": {
+        "source": "wfa_windows_fixture",
+        "wfeMean": 0.84,
+        "wfeStd": 0.11,
+        "wfeVariance": 0.0121,
+        "oosRetention": 0.82,
+        "relativeChange": -0.12,
+        "profitableWindowsRatio": 0.75,
+        "profitableWindowsCount": 9,
+        "totalWindows": 12,
+        "oosIsTrendMatch": true,
+        "winRateDegradationPp": -2.1,
+        "note": "CLI demo fixture"
+      },
+      "fullBacktestContext": {
+        "source": "full_backtest_fixture",
+        "fullSharpe": 1.85,
+        "fullCalmar": 2.35,
+        "fullMaxDrawdown": -0.12,
+        "note": "CLI demo fixture"
+      }
+    },
+    "verdict": "PASS",
+    "verdictReason": "OOS profile matches WFA expectations for this demo payload.",
+    "killSwitchValue": "Pause if next OOS window Sharpe falls below 0.5.",
+    "killSwitchHint": "Fixture narrative only.",
+    "parameterStabilityIndex": 0.78,
+    "edgeHalfLife": { "windows": 4, "days": 18 }
+  },
+  "robustnessScore": {
+    "overall": 82,
+    "components": {
+      "parameterStability": 0.85,
+      "timeRobustness": 0.78,
+      "marketRegime": 0.82,
+      "monteCarloStability": 0.81,
+      "sensitivity": 0.84
+    },
+    "modules": {
+      "validation": 78,
+      "risk": 85,
+      "stability": 84,
+      "execution": 88
+    }
+  },
+  "walkForwardAnalysis": {
+    "performanceTransfer": {
+      "windows": [
+        {
+          "window": "2023-Q3",
+          "isPeriod": {
+            "start": "2023-01-01",
+            "end": "2023-06-30"
+          },
+          "oosPeriod": {
+            "start": "2023-07-01",
+            "end": "2023-09-30"
+          },
+          "isEquityCurve": [
+            {
+              "date": "2023-01-01",
+              "value": 10000
+            },
+            {
+              "date": "2023-02-01",
+              "value": 10500
+            },
+            {
+              "date": "2023-03-01",
+              "value": 11000
+            },
+            {
+              "date": "2023-04-01",
+              "value": 10800
+            },
+            {
+              "date": "2023-05-01",
+              "value": 11200
+            },
+            {
+              "date": "2023-06-01",
+              "value": 11500
+            }
+          ],
+          "oosEquityCurve": [
+            {
+              "date": "2023-07-01",
+              "value": 10000
+            },
+            {
+              "date": "2023-08-01",
+              "value": 10200
+            },
+            {
+              "date": "2023-09-01",
+              "value": 9800
+            },
+            {
+              "date": "2023-09-30",
+              "value": 9500
+            }
+          ]
+        },
+        {
+          "window": "2024-Q1",
+          "isPeriod": {
+            "start": "2023-07-01",
+            "end": "2023-12-31"
+          },
+          "oosPeriod": {
+            "start": "2024-01-01",
+            "end": "2024-03-31"
+          },
+          "isEquityCurve": [
+            {
+              "date": "2023-07-01",
+              "value": 10000
+            },
+            {
+              "date": "2023-08-01",
+              "value": 10200
+            },
+            {
+              "date": "2023-09-01",
+              "value": 10500
+            },
+            {
+              "date": "2023-10-01",
+              "value": 10800
+            },
+            {
+              "date": "2023-11-01",
+              "value": 11000
+            },
+            {
+              "date": "2023-12-01",
+              "value": 11200
+            }
+          ],
+          "oosEquityCurve": [
+            {
+              "date": "2024-01-01",
+              "value": 10000
+            },
+            {
+              "date": "2024-02-01",
+              "value": 10500
+            },
+            {
+              "date": "2024-03-01",
+              "value": 10800
+            },
+            {
+              "date": "2024-03-31",
+              "value": 11200
+            }
+          ]
+        },
+        {
+          "window": "2024-Q3",
+          "isPeriod": {
+            "start": "2024-01-01",
+            "end": "2024-06-30"
+          },
+          "oosPeriod": {
+            "start": "2024-07-01",
+            "end": "2024-09-30"
+          },
+          "isEquityCurve": [
+            {
+              "date": "2024-01-01",
+              "value": 10000
+            },
+            {
+              "date": "2024-02-01",
+              "value": 10300
+            },
+            {
+              "date": "2024-03-01",
+              "value": 10600
+            },
+            {
+              "date": "2024-04-01",
+              "value": 10900
+            },
+            {
+              "date": "2024-05-01",
+              "value": 11100
+            },
+            {
+              "date": "2024-06-01",
+              "value": 11400
+            }
+          ],
+          "oosEquityCurve": [
+            {
+              "date": "2024-07-01",
+              "value": 10000
+            },
+            {
+              "date": "2024-08-01",
+              "value": 10200
+            },
+            {
+              "date": "2024-09-01",
+              "value": 10400
+            },
+            {
+              "date": "2024-09-30",
+              "value": 10600
+            }
+          ]
+        }
+      ]
+    },
+    "wfe": 0.84,
+    "consistency": 0.78,
+    "degradationRatio": 0.86,
+    "failedWindows": {
+      "count": 3,
+      "total": 12,
+      "windows": [
+        {
+          "period": "2023-Q4",
+          "reason": "Negative OOS return (-2.1%)",
+          "regime": "Low-Volatility"
+        },
+        {
+          "period": "2024-Q2",
+          "reason": "High drawdown in validation period",
+          "regime": "Bear"
+        },
+        {
+          "period": "2024-Q4",
+          "reason": "WFE below 0.5 threshold",
+          "regime": "Low-Volatility"
+        }
+      ]
+    },
+    "overfittingRisk": {
+      "score": 0.15,
+      "level": "LOW"
+    },
+    "verdict": "PASS",
+    "verdictExplanation": "Strategy shows stable performance transfer with acceptable degradation under forward testing.",
+    "windows": [
+      {
+        "period": "2024-01",
+        "optimizationReturn": 0.42,
+        "validationReturn": 0.35,
+        "parameters": {
+          "ema": 20,
+          "rsi": 14
+        },
+        "isProfitable": true,
+        "regime": "Normal"
+      },
+      {
+        "period": "2024-02",
+        "optimizationReturn": 0.48,
+        "validationReturn": 0.41,
+        "parameters": {
+          "ema": 20,
+          "rsi": 14
+        },
+        "isProfitable": true,
+        "regime": "Bull"
+      },
+      {
+        "period": "2024-03",
+        "optimizationReturn": 0.44,
+        "validationReturn": 0.38,
+        "parameters": {
+          "ema": 22,
+          "rsi": 14
+        },
+        "isProfitable": true,
+        "regime": "High-Volatility"
+      }
+    ],
+    "wfaConfig": {
+      "windowLength": "3 months",
+      "step": "1 month",
+      "isOosSplit": "70 / 30",
+      "optimizationScope": "full parameter grid"
+    },
+    "statisticalSignificance": {
+      "isSignificant": true,
+      "pValue": 0.03,
+      "monteCarloAdjustedWfe": 0.81
+    },
+    "distribution": {
+      "optimizationReturns": [
+        0.42,
+        0.48,
+        0.44,
+        0.46,
+        0.41
+      ],
+      "validationReturns": [
+        0.35,
+        0.41,
+        0.38,
+        0.39,
+        0.36
+      ]
+    }
+  },
+  "parameterSensitivity": {
+    "parameters": [
+      {
+        "name": "EMA Fast",
+        "sensitivity": 0.12,
+        "bestValue": 7,
+        "worstValue": 15,
+        "impact": "low",
+        "sensitivityScore": 0.12,
+        "varianceRange": "±15%",
+        "overfittingRisk": false
+      },
+      {
+        "name": "EMA Slow",
+        "sensitivity": 0.18,
+        "bestValue": 45,
+        "worstValue": 60,
+        "impact": "medium",
+        "sensitivityScore": 0.18,
+        "varianceRange": "±20%",
+        "overfittingRisk": false
+      },
+      {
+        "name": "RSI Period",
+        "sensitivity": 0.08,
+        "bestValue": 14,
+        "worstValue": 20,
+        "impact": "low",
+        "sensitivityScore": 0.08,
+        "varianceRange": "±10%",
+        "overfittingRisk": false
+      },
+      {
+        "name": "RSI Buy",
+        "sensitivity": 0.35,
+        "bestValue": 30,
+        "worstValue": 50,
+        "impact": "high",
+        "sensitivityScore": 0.35,
+        "varianceRange": "±25%",
+        "overfittingRisk": true
+      },
+      {
+        "name": "Stoploss",
+        "sensitivity": 0.15,
+        "bestValue": 2.5,
+        "worstValue": 4,
+        "impact": "low",
+        "sensitivityScore": 0.15,
+        "varianceRange": "±18%",
+        "overfittingRisk": false
+      }
+    ]
+  },
+  "turnoverAndCostDrag": {
+    "avgTradesPerMonth": 6,
+    "annualTurnover": 6.9,
+    "costDrag": -3,
+    "grossToNetDegradation": -16,
+    "interpretation": "Strategy is intentionally 'cost-heavy'. Edge covers trading costs. Critical for scale-up assessment.",
+    "interpretiveSummary": "Net edge is positive at baseline but sensitive to execution friction. Strategy is optimized for signal accuracy with controlled tail risk, though scalability remains the primary constraint due to non-linear slippage.",
+    "baselineAum": 10000,
+    "avgHoldingTimeHours": 125.8,
+    "costEdgeRatioPct": 49.8,
+    "breakevenMargin": "High",
+    "primaryConstraint": "Execution friction vs. Signal decay",
+    "deploymentClass": "Micro-cap / Production-ready",
+    "costDecomposition": {
+      "exchangeFeesPct": -1.5,
+      "slippagePct": -1.5,
+      "marketImpactPct": 0,
+      "totalCostDragPct": -3,
+      "rebateCaptureBps": 0,
+      "costDominance": "Fees and slippage are balanced; no single toxic driver."
+    },
+    "slippageSensitivity": [
+      {
+        "aum": 10000,
+        "slippageCagrPct": -1.5,
+        "netCagrPct": 29,
+        "status": "Optimal"
+      },
+      {
+        "aum": 100000,
+        "slippageCagrPct": -4.8,
+        "netCagrPct": 25.7,
+        "status": "Stable"
+      },
+      {
+        "aum": 1000000,
+        "slippageCagrPct": -15.1,
+        "netCagrPct": 15.4,
+        "status": "Warning"
+      },
+      {
+        "aum": 5000000,
+        "slippageCagrPct": -33.8,
+        "netCagrPct": -3.3,
+        "status": "COLLAPSE"
+      }
+    ],
+    "capacity": {
+      "alphaCollapseAum": 2500000,
+      "alphaCollapseNote": "Net CAGR intersects 0."
+    },
+    "marketImpactModel": {
+      "assumption": "Square-root law",
+      "liquidityRegime": "Top 20% depth"
+    },
+    "executionHedging": {
+      "orderTypeBias": "Limit-biased (Maker focus)",
+      "takerMakerRatio": "40 / 60",
+      "limitFillProbabilityPct": 85,
+      "toxicFlowRisk": "Low",
+      "adverseSelectionNote": "HFT adverse selection not detected."
+    },
+    "opportunityCostBps": 4.2,
+    "adverseSelectionCostBps": 0,
+    "status": {
+      "costAdaptability": "PASS",
+      "capacityGovernance": "SCALE-LIMITED",
+      "executionRisk": "CONTROLLED"
+    }
+  },
+  "riskAnalysis": {
+    "maxDrawdown": -0.12,
+    "sharpeRatio": 1.85,
+    "var": -0.08,
+    "metrics": {
+      "profitFactor": 2.1,
+      "expectancy": 0.025,
+      "winRate": 0.58
+    },
+    "recoveryFactor": 2.45,
+    "sortinoRatio": 2.1,
+    "expectedShortfall95": -0.105,
+    "gainToPain": 1.45,
+    "skewness": -0.45,
+    "kurtosis": 4.2,
+    "edgeStabilityZScore": 2.15,
+    "durbinWatson": 1.95,
+    "contextNote": "Metrics evaluated net of fees & slippage; compared against internal deployable thresholds.",
+    "tailAuthority": "Loss tails governed by hard stop + time-based exits; no convex payoff dependence.",
+    "riskVerdict": "PASS - Risk profile consistent with capital deployment criteria.",
+    "riskRegimeContext": "Beta-neutralized performance; 80% of drawdown variance explained by liquidity shocks (regime-specific).",
+    "tailRiskProfile": "Sub-Gaussian distribution with localized kurtosis. ES confirms tail events are within 1.5x of VaR limits.",
+    "riskAttribution": "Edge: 70% Signal Accuracy | 30% Volatility Harvesting. No hidden leverage or carry-trade dependency.",
+    "temporalStability": "Metrics consistent across 4/5 sub-segments. Low autocorrelation in residuals (Durbin-Watson: 1.95).",
+    "riskAssessment": {
+      "status": "STABLE",
+      "note": "Suitable for levered deployment given the high Recovery Factor and low Skewness.",
+      "maxLeverage": 1.5
+    },
+    "interpretation": [
+      "Strong risk-adjusted returns",
+      "Controlled drawdowns in normal conditions"
+    ]
+  },
+  "riskAndFailureAnalysis": {
+    "downsideExposure": {
+      "maxDrawdown": -0.184,
+      "worstWindow": "2022-Q3",
+      "tailRisk95": -0.22,
+      "timeToRecovery": 46
+    },
+    "failureScenarios": [
+      {
+        "scenario": "Sideways + low-volume regimes",
+        "description": "Signal decay, higher churn"
+      },
+      {
+        "scenario": "Volatility compression",
+        "description": "Reduced edge, longer flat periods"
+      }
+    ],
+    "capitalSensitivity": {
+      "small": "Suitable",
+      "medium": "Monitor slippage",
+      "large": "Not recommended"
+    },
+    "riskClassification": {
+      "drawdownRisk": "Medium",
+      "tailRisk": "Controlled",
+      "structuralRisk": "Regime-dependent"
+    }
+  },
+  "governanceAndOversightPolicy": {
+    "systemRecommendation": "ROBUST",
+    "humanReview": "Required before capital deployment",
+    "overrideCapability": "Enabled (fully logged)",
+    "mandatoryReviewTriggers": [
+      "Kiploks Robustness Score < 65",
+      "WFE < 0.70",
+      "Structural regime shift detected",
+      "Material increase in drawdown or slippage"
+    ],
+    "overridePolicy": [
+      "All overrides require justification",
+      "Override actions are timestamped and versioned",
+      "Full audit trail retained"
+    ],
+    "interpretation": [
+      "Decision support, not autonomous trading",
+      "Compatible with IC / Risk Committee processes",
+      "Clear accountability and auditability"
+    ]
+  },
+  "drawdownDistributionAndOutlierDependence": {
+    "drawdownDistribution": {
+      "medianDrawdown": -0.052,
+      "percentile90": -0.114,
+      "worst1Percent": -0.148,
+      "timeUnderWater": {
+        "lessThan30Days": 0.68,
+        "between30And60Days": 0.22,
+        "moreThan60Days": 0.1
+      }
+    },
+    "outlierDependence": {
+      "top5TradesContribution": 0.32,
+      "sharpeFullSample": 1.52,
+      "sharpeWithoutTop5": 1.34,
+      "returnDegradation": -0.11,
+      "verdict": "NOT OUTLIER-DEPENDENT"
+    },
+    "interpretation": [
+      "Drawdowns are frequent but shallow",
+      "Capital recovery time is short and predictable",
+      "Performance does not rely on isolated extreme events"
+    ]
+  },
+  "regimeContext": {
+    "regimes": [
+      {
+        "name": "Bull / High Vol",
+        "icon": "📈",
+        "performance": 0.82,
+        "winRate": 0.65,
+        "trades": 120
+      },
+      {
+        "name": "Bear / High Vol",
+        "icon": "📉",
+        "performance": 0.45,
+        "winRate": 0.42,
+        "trades": 45
+      },
+      {
+        "name": "Sideways / Low Vol",
+        "icon": "↔️",
+        "performance": 0.12,
+        "winRate": 0.38,
+        "trades": 80
+      }
+    ],
+    "classification": "Multi-regime adaptive",
+    "primaryEdge": "Volatility trend-following",
+    "vulnerability": "Low-volatility compression (mean reversion)",
+    "recommendation": [
+      "Deploy in Bull/Bear trending regimes",
+      "Avoid or reduce allocation during Sideways/Low Vol"
+    ],
+    "regimeTrigger": "Volatility Index (HV/ATR) below threshold → reduce risk"
+  },
+  "tradeDistributionAndOutlierDependence": {
+    "top5TradesContribution": 0.34,
+    "top10TradesContribution": 0.52,
+    "sharpeWithoutTop5": 1.42,
+    "sharpeWithoutTop10": 1.18,
+    "profitDistribution": "Balanced",
+    "skewness": 0.12,
+    "kurtosis": 2.8,
+    "tailRisk": -0.038,
+    "outlierRiskVerdict": "LOW",
+    "interpretation": [
+      "Performance not driven by isolated lucky events",
+      "Strategy remains robust after removing top trades",
+      "Distribution has no extreme tail dependency (low skew/kurtosis)",
+      "Tail risk is controlled and within acceptable bounds"
+    ]
+  },
+  "capacity": {
+    "slippageSensitivity": "HIGH",
+    "slippageSensitivityNote": "Degrades fast > $2M AUM",
+    "avgTradeLatency": 200,
+    "avgTradeLatencyStatus": "Acceptable",
+    "orderType": "Market",
+    "exchange": "Binance Spot",
+    "expectedReturnVsAum": [
+      {
+        "aum": "$100k",
+        "expectedReturn": 0.152
+      },
+      {
+        "aum": "$1M",
+        "expectedReturn": 0.128
+      },
+      {
+        "aum": "$10M",
+        "expectedReturn": 0.041,
+        "isCritical": true
+      }
+    ],
+    "capacityLimits": {
+      "maxRecommended": "$50k",
+      "softLimit": "$250k (degraded returns)",
+      "hardLimit": "$1M (returns collapse)"
+    },
+    "primaryConstraints": [
+      "Slippage (main driver)",
+      "Liquidity (not limiting for BTC spot)",
+      "Market impact at high AUM"
+    ],
+    "returnDegradation": [
+      {
+        "aum": "$100k",
+        "status": "Normal"
+      },
+      {
+        "aum": "$250k",
+        "status": "Moderate degradation"
+      },
+      {
+        "aum": "$1M",
+        "status": "Significant degradation"
+      },
+      {
+        "aum": "$10M",
+        "status": "Strategy breaks (not recommended)"
+      }
+    ],
+    "capacityVerdict": {
+      "deployableAs": "portfolio satellite",
+      "recommendedAllocation": "$25k-$50k",
+      "pilotAllocation": "$50k-$250k (monitor slippage)",
+      "notRecommended": "above $1M (high impact + drawdown risk)"
+    }
+  },
+  "stressTests": {
+    "shockTests": [
+      {
+        "icon": "☣️",
+        "event": "COVID Crash (2020)",
+        "maxDrawdown": -0.124,
+        "recoveryTime": 14
+      },
+      {
+        "icon": "📉",
+        "event": "FTX Collapse (2022)",
+        "maxDrawdown": -0.241,
+        "recoveryTime": 45,
+        "recoveryTimeNote": "(slow)"
+      },
+      {
+        "icon": "⚡",
+        "event": "Flash Crash (-10%)",
+        "maxDrawdown": -0.082,
+        "recoveryTime": 2
+      },
+      {
+        "icon": "🌪",
+        "event": "Liquidity Shock (Custom)",
+        "maxDrawdown": -0.18,
+        "recoveryTime": 60,
+        "recoveryTimeNote": "(slow)"
+      },
+      {
+        "icon": "🧨",
+        "event": "Volatility Spike (Custom)",
+        "maxDrawdown": -0.096,
+        "recoveryTime": 7
+      }
+    ],
+    "scenarioAnalysis": [
+      {
+        "title": "Liquidity Gap (-15% Flash Crash)",
+        "detail": "Est. Drawdown: -14.5% (Exceeds CVaR). Risk: Limit order non-fill."
+      },
+      {
+        "title": "Low Volatility Grind (VIX < 12 for 30d+)",
+        "detail": "Signal Decay: PF drops to 1.10. Action: Automated deleveraging."
+      },
+      {
+        "title": "Correlation Spike (Asset Corr > 0.85)",
+        "detail": "Diversification Collapse: Portfolio acts as single-asset bet."
+      }
+    ],
+    "killSwitches": [
+      "Execution Decay: Avg Slippage > 15 bps/trade for 20 consecutive fills.",
+      "Regime Shift: Performance falls below 2-sigma of Monte Carlo expectations.",
+      "Model Drift: Durbin-Watson moves outside 1.5-2.5 range."
+    ],
+    "stressScore": 72,
+    "verdict": [
+      "Resilient to volatility shocks",
+      "Vulnerable to liquidity cascades",
+      "Requires monitoring of liquidity & funding conditions"
+    ]
+  },
+  "uncertainty": {
+    "metrics": {
+      "sharpeRatio": {
+        "mean": 1.42,
+        "stdDev": 0.18,
+        "confidenceInterval": {
+          "lower": 1.05,
+          "upper": 1.71
+        },
+        "stability": "HIGH",
+        "coefficientOfVariation": 12.7
+      },
+      "cagr": {
+        "mean": 18.3,
+        "stdDev": 3.9,
+        "confidenceInterval": {
+          "lower": 11.2,
+          "upper": 24.6
+        },
+        "stability": "MEDIUM",
+        "coefficientOfVariation": 21.3
+      },
+      "drawdown": {
+        "mean": -11.8,
+        "confidenceInterval": {
+          "lower": -15.2,
+          "upper": -8.4
+        },
+        "stability": "HIGH"
+      }
+    },
+    "bootstrapMethod": {
+      "resamples": 10000,
+      "method": "block bootstrap (preserves autocorr.)"
+    },
+    "interpretation": "Metrics are statistically stable across resamples. Confidence intervals support fund-grade decision making."
+  },
+  "biasControl": {
+    "totalConfigurationsTested": 12480,
+    "effectiveDegreesOfFreedom": {
+      "adjusted": 9320,
+      "note": "Adjusted"
+    },
+    "deflatedSharpeRatio": 1.18,
+    "whiteRealityCheck": "PASSED",
+    "selectionBias": {
+      "level": "LOW",
+      "percentage": 12
+    },
+    "curveFittingRisk": {
+      "level": "LOW",
+      "percentage": 8
+    },
+    "overfittingRisk": {
+      "level": "LOW",
+      "percentage": 15
+    },
+    "multipleTestingCorrection": "Holm-Bonferroni",
+    "interpretation": [
+      "Performance unlikely due to random search",
+      "Explicit control for multiple testing",
+      "Curve-fitting and overfitting risks quantified",
+      "Statistical validity confirmed for deployment decisions"
+    ]
+  },
+  "monteCarloSimulation": {
+    "simulations": 10000,
+    "cagrDistribution": {
+      "worst5Percent": 21,
+      "median": 36,
+      "best95Percent": 52
+    },
+    "drawdownDistribution": {
+      "worst5Percent": -18.5,
+      "median": -11.2,
+      "best95Percent": -6
+    },
+    "pathStability": "HIGH",
+    "tailRisk": "LOW",
+    "interpretation": [
+      "Range of scenarios for returns and drawdowns",
+      "Support for capital-at-risk modeling",
+      "Enhances confidence in Kiploks Robustness Score and WFA"
+    ]
+  },
+  "dataIntegrityCheck": {
+    "dataQualityScore": 98,
+    "missingData": "2 minor gaps (interpolated)",
+    "lookAheadBias": "PASSED",
+    "survivorshipBias": "CHECKED (passed)",
+    "corporateActions": "ADJUSTED (if applicable)",
+    "timeSynchronization": "VERIFIED",
+    "tradingCosts": "INCLUDED",
+    "dataVersionHash": "7f8a1c3d...",
+    "source": "Binance Spot (official)"
+  },
+  "assumptionsAndLimitations": {
+    "assumes": [
+      "Continuous market liquidity in tested timeframe",
+      "Market orders executed within modeled slippage",
+      "No major exchange-specific execution anomalies",
+      "Historical data represents real market microstructure",
+      "Fees, spreads, and slippage are correctly applied"
+    ],
+    "doesNotModel": [
+      "Exchange outages and downtime",
+      "Regulatory halts, delistings, or margin restrictions",
+      "Extreme liquidity freezes (black swan events)",
+      "Latency, order queueing, and partial fills",
+      "Broker-specific risk controls (e.g., position limits)",
+      "Future regime shifts not present in historical data"
+    ],
+    "interpretation": [
+      "Clarifies the boundary of the analysis",
+      "Reduces legal and investment committee uncertainty",
+      "Signals mature, institution-grade platform"
+    ]
+  },
+  "deploymentRecommendation": {
+    "status": "APPROVED",
+    "statusPhase": "Pilot Phase",
+    "recommendedAllocation": {
+      "pilot": "$25k-$50k",
+      "fullScale": "up to $100k"
+    },
+    "useCase": [
+      "Portfolio Diversifier (satellite allocation)",
+      "Tactical allocation during favorable regimes"
+    ],
+    "deploymentConstraints": {
+      "maxCapital": "$50k (slippage-sensitive)",
+      "note": "Not suitable for large AUM without re-validation"
+    },
+    "operationalGuidelines": [
+      "Re-run WFA after any major market regime shift",
+      "Recalibrate if slippage/fees deviate > 0.05% from baseline",
+      "Maintain trade execution consistency (market orders)"
+    ],
+    "monitoringFocus": [
+      "Volatility regime shifts",
+      "Slippage drift",
+      "Trade frequency / execution quality",
+      "Drawdown deviation vs baseline"
+    ],
+    "exitStopConditions": [
+      "Drawdown exceeds 2× historical max drawdown (-24% OOS)",
+      "WFE drops below 0.7 in rolling 3-month window",
+      "Overfitting risk rises above 0.4"
+    ],
+    "nextSteps": [
+      "Start with 30-day pilot",
+      "Validate OOS performance and execution assumptions",
+      "Scale only after stable WFE + controlled slippage"
+    ]
+  },
+  "decisionLogic": {
+    "verdict": "ROBUST",
+    "rules": [
+      {
+        "id": "rule1",
+        "name": "Kiploks Robustness Score ≥ 70",
+        "condition": "Kiploks Robustness Score ≥ 70",
+        "passed": true
+      },
+      {
+        "id": "rule2",
+        "name": "Walk-Forward Efficiency (WFE) ≥ 0.80",
+        "condition": "Walk-Forward Efficiency (WFE) ≥ 0.80",
+        "passed": true
+      },
+      {
+        "id": "rule3",
+        "name": "OOS Sharpe ≥ 1.30",
+        "condition": "OOS Sharpe ≥ 1.30",
+        "passed": true
+      },
+      {
+        "id": "rule4",
+        "name": "Overfitting Risk ≤ 0.30",
+        "condition": "Overfitting Risk ≤ 0.30",
+        "passed": true
+      }
+    ],
+    "alternativeVerdicts": {
+      "caution": {
+        "conditions": [
+          {
+            "name": "Robustness ≥ 60",
+            "condition": "Robustness ≥ 60"
+          },
+          {
+            "name": "WFE ≥ 0.70",
+            "condition": "WFE ≥ 0.70"
+          },
+          {
+            "name": "Overfitting Risk ≤ 0.50",
+            "condition": "Overfitting Risk ≤ 0.50"
+          }
+        ]
+      },
+      "notRecommended": {
+        "condition": "otherwise"
+      }
+    },
+    "modifiers": [
+      {
+        "type": "penalty",
+        "description": "Low-vol regime sensitivity",
+        "value": "−6 pts"
+      },
+      {
+        "type": "bonus",
+        "description": "Stable OOS metrics",
+        "value": "+0.05 confidence"
+      },
+      {
+        "type": "bonus",
+        "description": "Low Monte Carlo variance",
+        "value": "+0.05 confidence"
+      }
+    ],
+    "auditNote": "Rules are versioned and immutable per run"
+  }
+}

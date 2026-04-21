@@ -5,6 +5,7 @@ import { runAnalyzeTrades } from "./commands/analyze-trades";
 import { runAnalyzeWindows } from "./commands/analyze-windows";
 import { runValidate } from "./commands/validate";
 import { parsePermutationNCli } from "./parsePermutationN";
+import { runUiServer } from "./commands/ui";
 
 function printHelp(): void {
   process.stdout.write(
@@ -20,6 +21,7 @@ function printHelp(): void {
       "  kiploks analyze-windows <windows.json> [--json] [--seed 42] [--decimals 8] [--permutation-n 100..10000]",
       "  kiploks upload <payload.json> --cloud [options]",
       "  kiploks test-conformance",
+      "  kiploks ui [--port 41731] [--no-open] [--watch]",
       "",
       "Upload options:",
       "  --cloud              Required for upload (integration results JSON)",
@@ -38,6 +40,8 @@ function printHelp(): void {
       "  kiploks analyze-trades trades.json --json --in-sample-months 3 --out-of-sample-months 1 --step rolling --format raw",
       "  KIPLOKS_API_KEY=... kiploks upload ./result.json --cloud",
       "  kiploks test-conformance",
+      "  kiploks ui --port 41731",
+      "  kiploks ui --watch   # Vite dev server + HMR (API proxied to orchestrator)",
       "",
       "test-conformance:",
       "  Runs engine validation (Vitest + boundary + bundle checks) when executed from",
@@ -296,6 +300,21 @@ async function main(): Promise<void> {
       return;
     }
     runTestConformance();
+    return;
+  }
+
+  if (command === "ui" || command === "serve") {
+    let port: number | undefined;
+    let open = true;
+    let watch = false;
+    for (let i = 0; i < argv.length; i++) {
+      const arg = argv[i]!;
+      if (arg === "--port") port = Number(argv[i + 1]);
+      if (arg === "--no-open") open = false;
+      if (arg === "--open") open = true;
+      if (arg === "--watch") watch = true;
+    }
+    await runUiServer({ port, open, watch });
     return;
   }
 

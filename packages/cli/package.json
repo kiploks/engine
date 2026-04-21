@@ -42,19 +42,35 @@
   "files": [
     "dist",
     "bin",
+    "fixtures",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json"
+    "build": "npm run build:web && tsc -p tsconfig.build.json",
+    "build:web": "vite build --config web/vite.config.mjs",
+    "build:code": "tsc -p tsconfig.build.json",
+    "ui": "KIPLOKS_UI_VITE_PORT=3001 node dist/index.js ui --watch",
+    "ui:static": "node dist/index.js ui"
   },
   "dependencies": {
+    "@dedalik/use-react": "^1.1.1",
+    "@kiploks/engine-adapters": "0.3.0",
     "@kiploks/engine-contracts": "0.3.0",
     "@kiploks/engine-core": "0.3.0",
-    "@kiploks/engine-adapters": "0.3.0"
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.3"
   },
   "license": "Apache-2.0"
 }

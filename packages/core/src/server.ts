@@ -1,6 +1,6 @@
 /**
  * Server-side assembly API for Node.js backends and integrations (not for browser bundles).
- * Import from `@kiploks/engine-core/server` — published on npm and semver-stable as a subpath.
+ * Import from `@kiploks/engine-core/server` - published on npm and semver-stable as a subpath.
  * Do not import from frontend / browser bundles (use root `@kiploks/engine-core` there).
  *
  * Intentionally mirrors `internal.ts` without re-exporting `./internal`, so `prepack` can omit

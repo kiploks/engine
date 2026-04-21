@@ -246,8 +246,8 @@ export function buildRiskNarratives(
       // Single source: 1/tailRatio for left-dominant (e.g. 0.14 -> 7.1x), tailRatio for right-dominant
       const tailMag = leftDominant ? (1 / tr).toFixed(1) : tr.toFixed(1);
       const desc = leftDominant
-        ? `Left-tail dominant distribution. Tail Ratio (${tr.toFixed(2)}) indicates severe asymmetry — left tail is ~${tailMag}x larger than right tail.`
-        : `Right-tail dominant distribution. Tail Ratio (${tr.toFixed(2)}) indicates severe asymmetry — right tail is ~${tailMag}x larger than left tail.`;
+        ? `Left-tail dominant distribution. Tail Ratio (${tr.toFixed(2)}) indicates severe asymmetry - left tail is ~${tailMag}x larger than right tail.`
+        : `Right-tail dominant distribution. Tail Ratio (${tr.toFixed(2)}) indicates severe asymmetry - right tail is ~${tailMag}x larger than left tail.`;
       return `${desc} Gaussian assumption does not apply. Skew: ${s.toFixed(2)}, Kurt: ${k.toFixed(1)}.${tailRatioNote}${smallSampleTailNote}`;
     }
     const asymmetricTailNote =

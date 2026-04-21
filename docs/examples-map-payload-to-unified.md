@@ -25,8 +25,8 @@ Authoritative types: [`UnifiedIntegrationPayload`](../packages/contracts/src/uni
 
 ## When not to use it
 
-- You already have a **`Trade[]`** or a small JSON list of trades — use **`analyze()`** or **`analyzeFromTrades()`** directly.
-- You only have **CSV** — use adapters (below) first, then analysis entrypoints.
+- You already have a **`Trade[]`** or a small JSON list of trades - use **`analyze()`** or **`analyzeFromTrades()`** directly.
+- You only have **CSV** - use adapters (below) first, then analysis entrypoints.
 
 ---
 
@@ -34,8 +34,8 @@ Authoritative types: [`UnifiedIntegrationPayload`](../packages/contracts/src/uni
 
 From `@kiploks/engine-adapters`:
 
-- **`csvToTrades(csvString, mapping)`** — whole file as a string in memory.
-- **`csvToTradesFromStream(stream, mapping, options)`** — Node `Readable` stream; supports a **`maxTrades`** cap for large files (see [`packages/adapters/README.md`](../packages/adapters/README.md) and [`csvToTrades.ts`](../packages/adapters/src/csvToTrades.ts)).
+- **`csvToTrades(csvString, mapping)`** - whole file as a string in memory.
+- **`csvToTradesFromStream(stream, mapping, options)`** - Node `Readable` stream; supports a **`maxTrades`** cap for large files (see [`packages/adapters/README.md`](../packages/adapters/README.md) and [`csvToTrades.ts`](../packages/adapters/src/csvToTrades.ts)).
 
 **Performance tip:** For large CSVs, prefer **`csvToTradesFromStream`**; respect the row cap behavior documented in the adapter.
 
@@ -72,6 +72,6 @@ Exact field aliases are defined in [`mapPayloadToUnified.ts`](../packages/core/s
 
 ## See also
 
-- **[`ENTRYPOINTS.md`](../ENTRYPOINTS.md)** — full entrypoint map.  
-- **[`examples/04-csv-to-trades.md`](examples/04-csv-to-trades.md)** — CSV column mapping examples.  
-- **[`OPEN_CORE_INTEGRATION_PRINCIPLES.md`](../OPEN_CORE_INTEGRATION_PRINCIPLES.md)** — why there is no `runEverything()`.
+- **[`ENTRYPOINTS.md`](../ENTRYPOINTS.md)** - full entrypoint map.  
+- **[`examples/04-csv-to-trades.md`](examples/04-csv-to-trades.md)** - CSV column mapping examples.  
+- **[`OPEN_CORE_INTEGRATION_PRINCIPLES.md`](../OPEN_CORE_INTEGRATION_PRINCIPLES.md)** - why there is no `runEverything()`.

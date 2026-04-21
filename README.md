@@ -1,5 +1,18 @@
 # Kiploks Engine (Open Core)
 
+## New: easier Freqtrade bot testing in UI
+
+You can now run Freqtrade bot tests directly from the web interface with much less setup friction.
+
+![Kiploks UI preview](https://kiploks.com/video/kiploks-ui-sm.gif)
+
+- Pick a specific backtest artifact from the list, or run in `Auto (top_n)` mode.
+- Start integration runs from a cleaner Step 4 workspace with collapsible sections.
+- Get report links in run logs after successful local runs, so you can open results right away.
+- Report title handling is automatic and predictable when switching between artifact and `top_n` modes.
+
+Demo video: [kiploks-ui.mp3](https://kiploks.com/video/kiploks-ui.mp3)
+
 [![npm](https://img.shields.io/npm/v/@kiploks/engine-core)](https://www.npmjs.com/package/@kiploks/engine-core)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 

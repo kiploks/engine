@@ -2,7 +2,7 @@
 
 Authoritative copies of engine-focused guides live **in this folder** so they ship with this **engine** repository (public OSS root). Pre-release steps (including docs vs contracts) are in root [`RELEASE_CHECKLIST.md`](../RELEASE_CHECKLIST.md); versioning and publish notes are in [`OSS_PUBLIC_REPO_SYNC.md`](OSS_PUBLIC_REPO_SYNC.md).
 
-**Start here:** [`ENTRYPOINTS.md`](ENTRYPOINTS.md) — input/output map and entrypoint choice (includes a text fallback if Mermaid does not render).
+**Start here:** [`ENTRYPOINTS.md`](ENTRYPOINTS.md) - input/output map and entrypoint choice (includes a text fallback if Mermaid does not render).
 
 **Package names vs directories** npm packages use scoped names such as `@kiploks/engine-core`, `@kiploks/engine-contracts`. In this repo they live under **`packages/core/`**, **`packages/contracts/`**, **`packages/cli/`** (not `engine-core/` as a folder name).
 
@@ -14,6 +14,7 @@ Authoritative copies of engine-focused guides live **in this folder** so they sh
 | [`OPEN_CORE_INTEGRATION_PRINCIPLES.md`](OPEN_CORE_INTEGRATION_PRINCIPLES.md) | Why there is no `runEverything()`, `BlockResult` design |
 | [`examples-map-payload-to-unified.md`](examples-map-payload-to-unified.md) | `mapPayloadToUnified` and CSV-first workflows |
 | [`OPEN_CORE_LOCAL_USER_GUIDE.md`](OPEN_CORE_LOCAL_USER_GUIDE.md) | Install, first `analyze()`, CLI, conformance, optional cloud upload |
+| [`LOCAL_ORCHESTRATOR_UI_ARCHITECTURE.md`](LOCAL_ORCHESTRATOR_UI_ARCHITECTURE.md) | Local backend orchestrator + UI shell architecture for CSV and bot integrations |
 | [`OPEN_CORE_METHODOLOGY.md`](OPEN_CORE_METHODOLOGY.md) | Scope, determinism, validation model |
 | [`OPEN_CORE_REPRODUCIBILITY.md`](OPEN_CORE_REPRODUCIBILITY.md) | Hashes, versions, CI gates |
 | [`WFA_PROFESSIONAL.md`](WFA_PROFESSIONAL.md) | Professional WFA / WFE methodology |
@@ -21,8 +22,8 @@ Authoritative copies of engine-focused guides live **in this folder** so they sh
 | [`OSS_PUBLIC_REPO_SYNC.md`](OSS_PUBLIC_REPO_SYNC.md) | Repository layout, one `VERSION`, `sync-versions`, publish notes |
 | [`RELEASE_CHECKLIST.md`](../RELEASE_CHECKLIST.md) | Pre-release checks (tests, docs vs contracts) |
 | [`BOT_INTEGRATIONS.md`](BOT_INTEGRATIONS.md) | Freqtrade / OctoBot Python integrations (optional path without npm engine) |
-| [`MONTE_CARLO_SIMULATION_IMPLEMENTATION.md`](MONTE_CARLO_SIMULATION_IMPLEMENTATION.md) | **Monte Carlo index** — path MC vs professional window bootstrap, links to guides |
-| [`MONTE_CARLO_PATH.md`](MONTE_CARLO_PATH.md) | **Path-based Monte Carlo (user guide)** — `buildPathMonteCarloSimulation`, API, limits, reproducibility |
+| [`MONTE_CARLO_SIMULATION_IMPLEMENTATION.md`](MONTE_CARLO_SIMULATION_IMPLEMENTATION.md) | **Monte Carlo index** - path MC vs professional window bootstrap, links to guides |
+| [`MONTE_CARLO_PATH.md`](MONTE_CARLO_PATH.md) | **Path-based Monte Carlo (user guide)** - `buildPathMonteCarloSimulation`, API, limits, reproducibility |
 
 ## TODO
 

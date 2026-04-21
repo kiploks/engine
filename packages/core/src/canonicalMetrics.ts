@@ -68,7 +68,10 @@ export interface OOSMetrics {
   maxDrawdown: number;
   recoveryFactor: number | null;
   gainToPain: number | null;
+  /** OOS trade rows when available; 0 when metrics are from WFA periods or payload only. */
   totalTrades: number;
+  /** When `source` is `wfa_window_oos`, number of WFA OOS periods used (same as period return count). */
+  wfaOosWindowCount?: number;
   winRate: number;
   profitFactor: number | null;
   profitableWindowsRatio?: number;
@@ -292,6 +295,10 @@ function mapRiskResultToOOSMetrics(
     Number.isFinite(risk.recoveryFactor) && Number.isFinite(risk.maxDrawdown) && risk.maxDrawdown !== 0
       ? (risk.recoveryFactor as number) * Math.abs(risk.maxDrawdown)
       : NaN;
+  const wfaOosWindowCount =
+    source === "wfa_window_oos" && typeof risk.oosWindowCount === "number" && Number.isFinite(risk.oosWindowCount)
+      ? risk.oosWindowCount
+      : undefined;
   return {
     source,
     totalReturn: Number.isFinite(totalReturn) ? totalReturn : 0,
@@ -304,6 +311,7 @@ function mapRiskResultToOOSMetrics(
     winRate: Number.isFinite(risk.metrics?.winRate) ? (risk.metrics.winRate as number) : 0,
     profitFactor: Number.isFinite(risk.metrics?.profitFactor) ? (risk.metrics.profitFactor as number) : null,
     initialBalance,
+    ...(wfaOosWindowCount != null ? { wfaOosWindowCount } : {}),
   };
 }
 
@@ -312,7 +320,17 @@ function mapRiskResultToOOSMetrics(
 // ---------------------------------------------------------------------------
 
 /**
- * Build OOSMetrics by aggregating validation returns from WFA periods. Source = "wfa_window_oos".
+ * Rows used for WFA math: `periods` if non-empty, otherwise `windows` (transform output uses `windows` only).
+ */
+export function wfaRowsForMetrics(wfa: Record<string, unknown> | null | undefined): Record<string, unknown>[] {
+  if (!wfa) return [];
+  if (Array.isArray(wfa.periods) && wfa.periods.length > 0) return wfa.periods as Record<string, unknown>[];
+  if (Array.isArray(wfa.windows) && wfa.windows.length > 0) return wfa.windows as Record<string, unknown>[];
+  return [];
+}
+
+/**
+ * Build OOSMetrics by aggregating validation returns from WFA rows. Source = "wfa_window_oos".
  */
 export function aggregateOOSFromWFAWindows(
   periods: Record<string, unknown>[],
@@ -336,12 +354,12 @@ export function aggregateOOSFromWFAWindows(
  * Build per-window IS/OOS metrics from walkForwardAnalysis.
  */
 export function buildWFAWindowMetrics(wfa: Record<string, unknown> | null | undefined): WFAWindowMetrics[] {
-  const periods = Array.isArray(wfa?.periods) ? (wfa.periods as Record<string, unknown>[]) : [];
+  const periodRows = wfaRowsForMetrics(wfa);
   const perfTransfer = wfa?.performanceTransfer as { windows?: unknown[] } | undefined;
-  const windows = perfTransfer?.windows ?? [];
+  const transferWindows = perfTransfer?.windows ?? [];
   const out: WFAWindowMetrics[] = [];
-  for (let i = 0; i < periods.length; i++) {
-    const p = periods[i] as Record<string, unknown>;
+  for (let i = 0; i < periodRows.length; i++) {
+    const p = periodRows[i] as Record<string, unknown>;
     const optReturn = getPeriodReturn(p, "optimizationReturn");
     const valReturn = getPeriodReturn(p, "validationReturn");
     const startDate = (p.startDate ?? p.start_date ?? p.start ?? "") as string;
@@ -357,8 +375,8 @@ export function buildWFAWindowMetrics(wfa: Record<string, unknown> | null | unde
     };
     const validationMaxDD = p.validationMaxDD;
     const oosCurve =
-      Array.isArray((windows[i] as Record<string, unknown>)?.oosEquityCurve) &&
-      (windows[i] as Record<string, unknown>).oosEquityCurve;
+      Array.isArray((transferWindows[i] as Record<string, unknown> | undefined)?.oosEquityCurve) &&
+      (transferWindows[i] as Record<string, unknown>).oosEquityCurve;
     let oosMaxDrawdown = NaN;
     if (typeof validationMaxDD === "number" && Number.isFinite(validationMaxDD)) {
       oosMaxDrawdown =
@@ -407,6 +425,10 @@ export function buildWFAWindowMetrics(wfa: Record<string, unknown> | null | unde
  */
 export function buildRiskBlockFromOOSMetrics(oosMetrics: OOSMetrics | null): RiskAnalysisResult | null {
   if (!oosMetrics) return null;
+  const wfaNote =
+    oosMetrics.source === "wfa_window_oos" && (oosMetrics.wfaOosWindowCount ?? 0) > 0
+      ? "Profit factor, win rate, and gain-to-pain are from WFA OOS period returns, not an OOS trade list."
+      : undefined;
   const r: RiskAnalysisResult = {
     maxDrawdown: oosMetrics.maxDrawdown,
     sharpeRatio: oosMetrics.sharpeRatio ?? NaN,
@@ -424,7 +446,9 @@ export function buildRiskBlockFromOOSMetrics(oosMetrics: OOSMetrics | null): Ris
     kurtosis: NaN,
     edgeStabilityZScore: NaN,
     durbinWatson: NaN,
-    oosWindowCount: 0,
+    oosWindowCount: oosMetrics.wfaOosWindowCount ?? 0,
   };
-  return { ...r, ...buildRiskNarratives(r) };
+  const narr = buildRiskNarratives(r);
+  const diagnosticNote = [wfaNote, narr.diagnosticNote].filter((s) => typeof s === "string" && s.length > 0).join(" ");
+  return { ...r, ...narr, ...(diagnosticNote ? { diagnosticNote } : {}) };
 }

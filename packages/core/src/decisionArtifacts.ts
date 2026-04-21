@@ -9,6 +9,7 @@ export type DecisionFlag =
   | "POSITIVE_EXPECTANCY_POSITIVE"
   | "POSITIVE_MONTE_CARLO_STABLE"
   | "POSITIVE_REGIME_ROBUST"
+  | "POSITIVE_DATA_QUALITY_HIGH"
   | "RISK_LOW_VOL_REGIME"
   | "RISK_CAPACITY_LIMITED"
   | "RISK_HIGH_DRAWDOWN"
@@ -68,6 +69,8 @@ export interface BuildDecisionArtifactsInput {
   riskAnalysis?: unknown;
   parameterSensitivity?: unknown;
   turnoverAndCostDrag?: unknown;
+  /** Regime pass/fail (e.g. `regimeSurvivalMatrix`) for POSITIVE_REGIME_ROBUST - not the DQG module. */
+  proBenchmarkMetrics?: unknown;
   verdictPayload?: unknown;
   strategyActionPlanPrecomputed?: unknown;
 }
@@ -83,6 +86,7 @@ const FLAG_WEIGHT: Record<DecisionFlag, number> = {
   POSITIVE_EXPECTANCY_POSITIVE: 70,
   POSITIVE_MONTE_CARLO_STABLE: 75,
   POSITIVE_REGIME_ROBUST: 80,
+  POSITIVE_DATA_QUALITY_HIGH: 72,
   RISK_LOW_VOL_REGIME: 60,
   RISK_CAPACITY_LIMITED: 70,
   RISK_HIGH_DRAWDOWN: 85,
@@ -167,8 +171,17 @@ function evaluateFlags(input: BuildDecisionArtifactsInput): DecisionFlag[] {
 
   const dataQuality = toNum((robustness.modules as Record<string, unknown> | undefined)?.dataQuality);
   if (dataQuality != null) {
-    if (dataQuality >= 75) flags.push("POSITIVE_REGIME_ROBUST");
+    if (dataQuality >= 75) flags.push("POSITIVE_DATA_QUALITY_HIGH");
     if (dataQuality < 40) flags.push("RISK_REGIME_DEPENDENT");
+  }
+
+  const pro = (input.proBenchmarkMetrics ?? {}) as Record<string, unknown>;
+  const regimeMatrix = pro.regimeSurvivalMatrix as
+    | Record<string, { pass?: boolean; fragile?: boolean; fail?: boolean }>
+    | undefined;
+  if (regimeMatrix && typeof regimeMatrix === "object") {
+    const passCount = Object.values(regimeMatrix).filter((cell) => cell && cell.pass === true).length;
+    if (passCount >= 1) flags.push("POSITIVE_REGIME_ROBUST");
   }
 
   const slippageStatus = String(toc.breakevenStatus ?? "");
@@ -199,15 +212,42 @@ export function buildDecisionArtifacts(input: BuildDecisionArtifactsInput): {
     prioritized.risks.includes("RISK_OVERFIT_HIGH") ||
     prioritized.risks.includes("RISK_WFA_DEGRADATION");
 
-  let decisionVerdict: "ROBUST" | "CAUTION" | "NOT RECOMMENDED";
-  if (finalLabel === "DO NOT DEPLOY") decisionVerdict = "NOT RECOMMENDED";
-  else if (finalLabel === "CAUTION") decisionVerdict = "CAUTION";
-  else if (finalLabel === "ROBUST") decisionVerdict = "ROBUST";
-  else if (hasCriticalRisk) decisionVerdict = "NOT RECOMMENDED";
-  else if (prioritized.positives.length >= 2 && prioritized.risks.length <= 1) decisionVerdict = "ROBUST";
-  else decisionVerdict = "CAUTION";
+  const robustnessScoreRec = (input.robustnessScore ?? {}) as Record<string, unknown>;
+  const robustnessOverall = toNum(robustnessScoreRec.overall);
+  const blockedByModule = String(robustnessScoreRec.blockedByModule ?? "");
+  const blockedByModulesRaw = robustnessScoreRec.blockedByModules;
+  const blockedByModules = Array.isArray(blockedByModulesRaw) ? (blockedByModulesRaw as unknown[]) : [];
+  const scoreBlocked =
+    (robustnessOverall ?? 0) === 0 ||
+    blockedByModule.length > 0 ||
+    blockedByModules.length > 0;
 
-  const robustnessOverall = toNum(((input.robustnessScore ?? {}) as Record<string, unknown>).overall);
+  const engineVerdict = String(verdictPayload.verdict ?? "").toUpperCase();
+
+  let decisionVerdict: "ROBUST" | "CAUTION" | "NOT RECOMMENDED";
+  if (engineVerdict === "FAIL" || engineVerdict === "REJECTED") {
+    decisionVerdict = "NOT RECOMMENDED";
+  } else if (engineVerdict === "INCUBATE" || engineVerdict === "WATCH") {
+    decisionVerdict = "CAUTION";
+  } else if (engineVerdict === "ROBUST") {
+    decisionVerdict = "ROBUST";
+  } else if (finalLabel === "DO NOT DEPLOY") {
+    decisionVerdict = "NOT RECOMMENDED";
+  } else if (finalLabel === "CAUTION") {
+    decisionVerdict = "CAUTION";
+  } else if (finalLabel === "ROBUST") {
+    decisionVerdict = "ROBUST";
+  } else if (hasCriticalRisk) {
+    decisionVerdict = "NOT RECOMMENDED";
+  } else if (prioritized.positives.length >= 2 && prioritized.risks.length <= 1) {
+    decisionVerdict = "ROBUST";
+  } else {
+    decisionVerdict = "CAUTION";
+  }
+
+  if (scoreBlocked) {
+    decisionVerdict = "NOT RECOMMENDED";
+  }
   const baseConfidence = robustnessOverall != null ? clamp(robustnessOverall / 100, 0.1, 0.99) : 0.55;
   const confidencePenalty = prioritized.risks.length * 0.06;
   const confidenceBonus = prioritized.positives.length * 0.04;
@@ -258,7 +298,6 @@ export function buildDecisionArtifacts(input: BuildDecisionArtifactsInput): {
     ];
 
   const modifiers: DecisionLogic["modifiers"] = [];
-  const blockedByModule = String((((input.robustnessScore ?? {}) as Record<string, unknown>).blockedByModule) ?? "");
   if (blockedByModule.length > 0) {
     modifiers.push({
       type: "penalty",

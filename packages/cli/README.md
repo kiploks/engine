@@ -1,5 +1,18 @@
 # @kiploks/engine-cli
 
+## New: easier Freqtrade bot testing in UI
+
+You can now run Freqtrade bot tests directly from the web interface with much less setup friction.
+
+- Pick a specific backtest artifact from the list, or run in `Auto (top_n)` mode.
+- Start integration runs from a cleaner Step 4 workspace with collapsible sections.
+- Get report links in run logs after successful local runs, so you can open results right away.
+- Report title handling is automatic and predictable when switching between artifact and `top_n` modes.
+
+![Kiploks UI preview](https://kiploks.com/video/kiploks-ui-sm.gif)
+
+Demo video: [kiploks-ui.mp3](https://kiploks.com/video/kiploks-ui.mp3)
+
 **Repository:** [github.com/kiploks/engine](https://github.com/kiploks/engine)
 
 Command-line entry for the **[Kiploks](https://kiploks.com)** Open Core engine: run `analyze` on JSON, optional **cloud upload** for parity checks, and drive the full **engine validation** suite from a git checkout of this repository.
@@ -31,6 +44,22 @@ Run the deterministic `analyze()` pipeline on a JSON file matching `AnalyzeInput
 ```bash
 kiploks analyze ./input.json --json
 ```
+
+### `kiploks ui`
+
+Start local OSS orchestrator server for UI shell workflows (CSV analysis, preflight, local paths, jobs).
+
+```bash
+kiploks ui --port 41731
+# without auto-opening browser:
+kiploks ui --no-open
+```
+
+Default behavior:
+- binds to `127.0.0.1`;
+- retries with fallback ports when preferred port is occupied;
+- prints available local API routes at `/`;
+- demo SaaS-shaped reports load only when **`KIPLOKS_UI_SEED_SAAS_DEMOS=1`** is set (fixtures `saas-mock-report.json` / `saas-mock-paper-tiger-report.json`).
 
 ### `kiploks upload --cloud`
 

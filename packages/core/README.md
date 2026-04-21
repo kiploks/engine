@@ -1,5 +1,18 @@
 # @kiploks/engine-core
 
+## New: easier Freqtrade bot testing in UI
+
+You can now run Freqtrade bot tests directly from the web interface with much less setup friction.
+
+- Pick a specific backtest artifact from the list, or run in `Auto (top_n)` mode.
+- Start integration runs from a cleaner Step 4 workspace with collapsible sections.
+- Get report links in run logs after successful local runs, so you can open results right away.
+- Report title handling is automatic and predictable when switching between artifact and `top_n` modes.
+
+![Kiploks UI preview](https://kiploks.com/video/kiploks-ui-sm.gif)
+
+Demo video: [kiploks-ui.mp3](https://kiploks.com/video/kiploks-ui.mp3)
+
 **Repository:** [github.com/kiploks/engine](https://github.com/kiploks/engine)
 
 Deterministic **trading analytics engine** for **[Kiploks](https://kiploks.com)** Open Core: `analyze()`, walk-forward and professional-grade paths, benchmark and turnover logic, and types aligned with hosted Kiploks reports and integrations.
@@ -31,8 +44,8 @@ Results are **deterministic** for a given input, config, and published version. 
 
 ## API policy
 
-- **Browser / integrators:** `import { … } from "@kiploks/engine-core"` — stable, documented surface.
-- **Node / hosted backends (full report assembly):** `import { … } from "@kiploks/engine-core/server"` — semver-stable **subpath** on npm. Do not use this from frontend bundles.
+- **Browser / integrators:** `import { … } from "@kiploks/engine-core"` - stable, documented surface.
+- **Node / hosted backends (full report assembly):** `import { … } from "@kiploks/engine-core/server"` - semver-stable **subpath** on npm. Do not use this from frontend bundles.
 - The legacy `./internal` entry is stripped from published `package.json` (`prepack`); prefer `./server` for server-side code.
 
 ## License

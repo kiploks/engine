@@ -16,7 +16,7 @@ Short, copy-paste friendly examples for `@kiploks/engine-*` packages. All exampl
 | 08 | [`08-result-shape-and-kiploks-ui.md`](08-result-shape-and-kiploks-ui.md) | How JSON maps to product analysis blocks + [`result-layout-demo.html`](result-layout-demo.html) |
 | 09 | [`09-full-report-vs-public-wfa.md`](09-full-report-vs-public-wfa.md) | Benchmark, risk, kill switch and full `TestResultData` vs public WFA output |
 | 10 | [`10-methodology-flow-and-engine.md`](10-methodology-flow-and-engine.md) | Methodology page block order (DQG → … → Final Verdict) mapped to `core/` (package `@kiploks/engine-core`) and OSS examples |
-| 11 | [`monte-carlo-example.md`](monte-carlo-example.md) | `buildPathMonteCarloSimulation` — toy curve, seed, reading labels |
+| 11 | [`monte-carlo-example.md`](monte-carlo-example.md) | `buildPathMonteCarloSimulation` - toy curve, seed, reading labels |
 
 ## Static assets (same folder)
 
