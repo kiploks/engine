@@ -9,9 +9,7 @@ You can now run Freqtrade bot tests directly from the web interface with much le
 - Get report links in run logs after successful local runs, so you can open results right away.
 - Report title handling is automatic and predictable when switching between artifact and `top_n` modes.
 
-![Kiploks UI preview](https://kiploks.com/video/kiploks-ui-sm.gif)
-
-Demo video: [kiploks-ui.mp3](https://kiploks.com/video/kiploks-ui.mp3)
+https://github.com/user-attachments/assets/b376f964-ab70-44ef-b8f6-bc3fd19f4e21
 
 **Repository:** [github.com/kiploks/engine](https://github.com/kiploks/engine)
 
