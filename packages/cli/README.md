@@ -17,7 +17,7 @@ npx -y @kiploks/engine-cli ui --watch
 - Pick a specific backtest artifact from the list, or run in `Auto (top_n)` mode.
 - Start integration runs from a cleaner Step 4 workspace with collapsible sections.
 - Get report links in run logs after successful local runs, so you can open results right away.
-- Report title handling is automatic and predictable when switching between artifact and `top_n` modes.
+- Report title handling is automatic and predictable when switching between artifact and [top_n](https://github.com/kiploks/engine/blob/main/docs/BOT_INTEGRATIONS.md) modes.
 
 
 **Repository:** [github.com/kiploks/engine](https://github.com/kiploks/engine)
