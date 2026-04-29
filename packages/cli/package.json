@@ -41,6 +41,7 @@
   },
   "files": [
     "dist",
+    "web",
     "bin",
     "fixtures",
     "README.md",

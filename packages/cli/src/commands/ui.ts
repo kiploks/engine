@@ -410,7 +410,7 @@ export async function runUiServer(args: UiCommandArgs): Promise<void> {
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       process.stderr.write(
-        `Failed to start Vite for --watch (${msg}). Install devDependencies in this package (vite) and retry.\n`,
+        `Failed to start Vite for --watch (${msg}). Ensure @kiploks/engine-cli includes web/ (for npx, upgrade CLI) or run from a git checkout with npm install.\n`,
       );
       server.close();
       process.exitCode = 1;
