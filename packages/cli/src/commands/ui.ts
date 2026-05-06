@@ -1166,6 +1166,18 @@ async function runIntegrationCommand(
       );
       return;
     }
+    const noResultsLine = detectNoBacktestResultsFromOutput(allOutputLines);
+    if (noResultsLine) {
+      setJobFailed(
+        job,
+        new Error(
+          "Integration produced no backtest results. Run/backfill Freqtrade backtests first so user_data/backtest_results contains files. " +
+            noResultsLine,
+        ),
+        "integration run failed",
+      );
+      return;
+    }
     setJobSucceeded(job, "integration run completed");
   } catch (error) {
     if (job.status === "cancelled") {
@@ -1406,6 +1418,16 @@ function detectKiploksUploadFailureFromOutput(lines: string[]): string | null {
         short +
         ". Check api_url in kiploks.json and that target host:port is reachable from Docker."
       );
+    }
+  }
+  return null;
+}
+
+/** Some bridge revisions returned exit code 0 despite empty scan; treat that as failed integration run. */
+function detectNoBacktestResultsFromOutput(lines: string[]): string | null {
+  for (const line of lines) {
+    if (/No backtest results to send\./i.test(line) || /No results to process/i.test(line)) {
+      return line.length > 500 ? line.slice(0, 500) + "..." : line;
     }
   }
   return null;
