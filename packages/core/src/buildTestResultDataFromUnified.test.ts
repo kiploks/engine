@@ -111,6 +111,33 @@ describe("buildTestResultDataFromUnified", () => {
     expect(out?.verdictPayload).toBeDefined();
   });
 
+  it("creates benchmarkComparison fallback when payload has no benchmark block", () => {
+    const payload = makePayload({
+      benchmarkComparison: undefined,
+      backtestResult: {
+        config: {
+          symbol: "BTCUSDT",
+          timeframe: "1h",
+          exchange: "binance",
+          initialBalance: 1000,
+          startDate: "2024-01-01",
+          endDate: "2024-12-31",
+        },
+        results: {
+          symbol: "BTCUSDT",
+          totalTrades: 48,
+          totalReturn: 0.25,
+        },
+      },
+    });
+    const out = buildTestResultDataFromUnified(payload as never, "r1");
+    const bc = out?.benchmarkComparison as Record<string, unknown> | null | undefined;
+    expect(bc).toBeTruthy();
+    expect(typeof bc?.strategyCAGR).toBe("number");
+    expect(typeof bc?.btcCAGR).toBe("number");
+    expect(Array.isArray(bc?.interpretation)).toBe(true);
+  });
+
   it("Layer 2.5 uses WFA windows when periods absent (OOS rows + pro sumOos + invariants)", () => {
     const wfaOnlyWindows = {
       windows: [

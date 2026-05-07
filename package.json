@@ -36,6 +36,7 @@
     "test:coverage": "vitest run -c vitest.config.ts --coverage",
     "engine:check:boundary": "node scripts/check-engine-boundary.mjs",
     "engine:check:bundle": "node scripts/check-open-core-bundles.mjs",
+    "bench:parity": "node scripts/bench-local-cloud-parity.mjs",
     "engine:validate": "npm run lint && npm run test && npm run engine:check:boundary && npm run engine:check:bundle",
     "engine:examples:generate-samples": "node docs/examples/scripts/generate-samples.mjs",
     "engine:examples:generate-monte-carlo-fixture": "node docs/examples/scripts/generate-monte-carlo-seed42.mjs",
