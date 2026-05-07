@@ -1530,7 +1530,11 @@ function normalizeOrigin(url: string): string {
     .replace(/\/$/, "");
 }
 
-function resolveApiTarget(merged: Record<string, unknown>): "local" | "cloud" {
+function resolveApiTarget(merged: Record<string, unknown>): "local" | "cloud" | "custom" {
+  const explicit = String(merged.api_target ?? "").trim();
+  if (explicit === "local" || explicit === "cloud" || explicit === "custom") {
+    return explicit;
+  }
   if (merged.local_mode === true) return "local";
   const u = normalizeOrigin(String(merged.api_url || ""));
   const browserLocal = normalizeOrigin(state.localApiBaseUrl);
@@ -1540,11 +1544,11 @@ function resolveApiTarget(merged: Record<string, unknown>): "local" | "cloud" {
   if (u.startsWith("http://host.docker.internal")) return "local";
   if (/^http:\/\/172\.(17|18|19)\./.test(u)) return "local";
   if (u.includes("kiploks.com")) return "cloud";
-  return "cloud";
+  return "custom";
 }
 
 function readKiploksConfigForGet(integration: IntegrationKind): {
-  apiTarget: "local" | "cloud";
+  apiTarget: "local" | "cloud" | "custom";
   config: Record<string, unknown>;
   localApiBaseUrl: string;
   localApiDockerBaseUrl: string;
@@ -1577,7 +1581,7 @@ function readKiploksConfigForGet(integration: IntegrationKind): {
 function saveKiploksConfigFromUi(
   integration: IntegrationKind,
   body: Record<string, unknown>,
-): { ok: boolean; configPath: string; apiTarget: "local" | "cloud" } {
+): { ok: boolean; configPath: string; apiTarget: "local" | "cloud" | "custom" } {
   const defaults = getFullDefaultKiploksJson(integration);
   const configPath = join(getIntegrationBridgePath(integration), "kiploks.json");
   let disk: Record<string, unknown> = {};
@@ -1589,7 +1593,9 @@ function saveKiploksConfigFromUi(
     }
   }
   const base = { ...defaults, ...disk };
-  const apiTarget = body.api_target === "cloud" ? "cloud" : "local";
+  const requestedTarget = String(body.api_target ?? "local").trim();
+  const apiTarget: "local" | "cloud" | "custom" =
+    requestedTarget === "cloud" ? "cloud" : requestedTarget === "custom" ? "custom" : "local";
 
   const out: Record<string, unknown> = { ...base };
 
@@ -1632,7 +1638,7 @@ function saveKiploksConfigFromUi(
     out.api_url = state.localApiDockerBaseUrl;
     out.api_token = state.localApiToken;
     out.local_mode = true;
-  } else {
+  } else if (apiTarget === "cloud") {
     out.api_url = "https://kiploks.com/";
     out.local_mode = false;
     const submitted = String(body.api_token ?? "").trim();
@@ -1646,9 +1652,21 @@ function saveKiploksConfigFromUi(
     } else {
       out.api_token = "";
     }
+  } else {
+    const submittedUrl = String(body.custom_api_url ?? body.api_url ?? "").trim();
+    if (!/^https?:\/\//i.test(submittedUrl)) {
+      throw new Error("custom_api_url must start with http:// or https://");
+    }
+    out.api_url = submittedUrl;
+    out.local_mode = false;
+    const submitted = String(body.api_token ?? "").trim();
+    const previous = String((base as Record<string, unknown>).api_token ?? "").trim();
+    if (submitted) out.api_token = submitted;
+    else out.api_token = previous;
   }
 
   out.schema_version = base.schema_version ?? defaults.schema_version;
+  out.api_target = apiTarget;
   out.integration_type = integration;
   out.engine_version = base.engine_version ?? defaults.engine_version;
   out.managed_by = "kiploks-orchestrator";

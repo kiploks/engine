@@ -267,6 +267,7 @@ export function useOrchestratorApp() {
       if (!prev) return prev;
       const nextCfg = { ...prev.config };
       if (v === "local") nextCfg.api_token = "";
+      if (v === "custom") nextCfg.api_url = "";
       return { ...prev, apiTarget: v, config: nextCfg };
     });
   };
@@ -286,7 +287,8 @@ export function useOrchestratorApp() {
       payload.hyperopt_loss = c.hyperopt_loss;
       payload.hyperopt_result_path = c.hyperopt_result_path;
       payload.keep_last_n_backtest_files = c.keep_last_n_backtest_files;
-      if (kiploksUi.apiTarget === "cloud") payload.api_token = c.api_token || "";
+      if (kiploksUi.apiTarget === "cloud" || kiploksUi.apiTarget === "custom") payload.api_token = c.api_token || "";
+      if (kiploksUi.apiTarget === "custom") payload.custom_api_url = c.api_url || "";
     } else {
       payload.backtesting_path = c.backtesting_path;
       payload.top_n = c.top_n;
@@ -295,7 +297,8 @@ export function useOrchestratorApp() {
       payload.wfaISSize = c.wfaISSize;
       payload.wfaOOSSize = c.wfaOOSSize;
       payload.skip_already_uploaded = c.skip_already_uploaded;
-      if (kiploksUi.apiTarget === "cloud") payload.api_token = c.api_token || "";
+      if (kiploksUi.apiTarget === "cloud" || kiploksUi.apiTarget === "custom") payload.api_token = c.api_token || "";
+      if (kiploksUi.apiTarget === "custom") payload.custom_api_url = c.api_url || "";
     }
     await api.post("/integrations/kiploks-config", payload);
     await loadKiploksConfig();

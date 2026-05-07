@@ -157,11 +157,14 @@ export function KiploksWorkspacePanel({ ctx }: Props) {
     setReportTitleTouched(true);
   }, [ctx.integration, ctx.selectedBacktestArtifactKey, ctx.backtestArtifacts, previousSelectedBacktestArtifactKey, reportTitleDraft]);
 
-  const cloudTokenMissing =
-    ctx.kiploksUi?.apiTarget === "cloud" && String(ctx.kiploksUi?.config?.api_token ?? "").trim() === "";
+  const cloudTokenMissing = (ctx.kiploksUi?.apiTarget === "cloud" || ctx.kiploksUi?.apiTarget === "custom") &&
+    String(ctx.kiploksUi?.config?.api_token ?? "").trim() === "";
+  const customApiUrl = String(ctx.kiploksUi?.config?.api_url ?? "").trim();
+  const customApiUrlInvalid = ctx.kiploksUi?.apiTarget === "custom" && !/^https?:\/\//i.test(customApiUrl);
   const cfg = ctx.kiploksUi?.config ?? {};
   const fieldValid = {
-    apiToken: ctx.kiploksUi?.apiTarget === "cloud" ? hasText(cfg.api_token) : true,
+    apiToken: ctx.kiploksUi?.apiTarget === "cloud" || ctx.kiploksUi?.apiTarget === "custom" ? hasText(cfg.api_token) : true,
+    customApiUrl: ctx.kiploksUi?.apiTarget === "custom" ? /^https?:\/\//i.test(String(cfg.api_url ?? "").trim()) : true,
     topN: isPositiveInt(cfg.top_n),
     skipAlreadyUploaded: typeof cfg.skip_already_uploaded === "boolean",
     wfaPeriods: isPositiveInt(cfg.wfaPeriods),
@@ -336,7 +339,12 @@ export function KiploksWorkspacePanel({ ctx }: Props) {
       ) : null}
       {cloudTokenMissing ? (
         <p className="mt-1 text-xs leading-relaxed text-amber-300/90">
-          Cloud target is selected, but api_token is empty. Fill API key in kiploks.json settings before Run Integration.
+          Cloud or Custom target is selected, but api_token is empty. Fill API key in kiploks.json settings before Run Integration.
+        </p>
+      ) : null}
+      {customApiUrlInvalid ? (
+        <p className="mt-1 text-xs leading-relaxed text-amber-300/90">
+          Custom target is selected, but api_url must start with http:// or https://.
         </p>
       ) : null}
       {(() => {
@@ -356,6 +364,7 @@ export function KiploksWorkspacePanel({ ctx }: Props) {
             !ctx.canRunIntegration ||
             ctx.hasKiploksChanges ||
             cloudTokenMissing ||
+            customApiUrlInvalid ||
             integrationSubmitting ||
             ctx.activeIntegrationJob?.status === "queued" ||
             ctx.activeIntegrationJob?.status === "running"
@@ -370,6 +379,7 @@ export function KiploksWorkspacePanel({ ctx }: Props) {
           disabled={
             !ctx.hasPathForIntegration ||
             cloudTokenMissing ||
+            customApiUrlInvalid ||
             integrationSubmitting ||
             ctx.activeIntegrationJob?.status === "queued" ||
             ctx.activeIntegrationJob?.status === "running"
@@ -385,6 +395,7 @@ export function KiploksWorkspacePanel({ ctx }: Props) {
           disabled={
             !ctx.hasPathForIntegration ||
             cloudTokenMissing ||
+            customApiUrlInvalid ||
             integrationSubmitting ||
             ctx.activeIntegrationJob?.status === "queued" ||
             ctx.activeIntegrationJob?.status === "running"
@@ -416,6 +427,7 @@ export function KiploksWorkspacePanel({ ctx }: Props) {
               Local (UI {String(ctx.kiploksUi.localApiBaseUrl || "")} · Docker {String(ctx.kiploksUi.localApiDockerBaseUrl || "")})
             </option>
             <option value="cloud">https://kiploks.com/</option>
+            <option value="custom">Custom URL</option>
           </select>
           {ctx.kiploksUi.apiTarget === "local" ? (
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
@@ -440,6 +452,33 @@ export function KiploksWorkspacePanel({ ctx }: Props) {
                 If the key is already in kiploks.json, leave this blank to keep it, or paste to replace. Save must run before Run Integration
                 (Docker) reads the file.
               </p>
+            </>
+          ) : null}
+          {ctx.kiploksUi.apiTarget === "custom" ? (
+            <>
+              <FieldLabelWithStatus label="custom_api_url" ok={fieldValid.customApiUrl} />
+              <input
+                className={oc.input}
+                type="text"
+                autoComplete="off"
+                spellCheck={false}
+                value={String(ctx.kiploksUi.config.api_url ?? "")}
+                onChange={(e) => ctx.setKiploksField("api_url", e.target.value)}
+                placeholder="http(s)://your-server.example"
+              />
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Save writes this value to kiploks.json as api_url and integration runs will upload to this server.
+              </p>
+              <FieldLabelWithStatus label="api_token" ok={fieldValid.apiToken} />
+              <input
+                className={oc.input}
+                type="text"
+                autoComplete="off"
+                spellCheck={false}
+                value={String(ctx.kiploksUi.config.api_token ?? "")}
+                onChange={(e) => ctx.setKiploksField("api_token", e.target.value)}
+                placeholder="Paste API key for custom Kiploks server"
+              />
             </>
           ) : null}
 
@@ -645,7 +684,7 @@ export function KiploksWorkspacePanel({ ctx }: Props) {
                   }
                 })();
               }}
-              disabled={!ctx.kiploksUi || !ctx.hasKiploksChanges}
+              disabled={!ctx.kiploksUi || !ctx.hasKiploksChanges || customApiUrlInvalid}
             >
               Save kiploks.json
             </button>
