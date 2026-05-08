@@ -124,6 +124,34 @@ function validBenchmarkComparison(value: unknown): boolean {
   );
 }
 
+function buildFallbackBenchmarkComparison(
+  unifiedPayload: Record<string, unknown>,
+  strategy: { testPeriodStart: string; testPeriodEnd: string },
+): Record<string, unknown> | null {
+  const backtest = unifiedPayload.backtestResult as Record<string, unknown> | undefined;
+  const results = backtest?.results as Record<string, unknown> | undefined;
+  const totalReturnRaw = results?.totalReturn;
+  if (typeof totalReturnRaw !== "number" || !Number.isFinite(totalReturnRaw)) return null;
+  const totalReturn = totalReturnRaw as number;
+  const days = parseDateToDays(strategy.testPeriodStart, strategy.testPeriodEnd);
+  const years = days != null && days > 0 ? days / 365.25 : null;
+  const strategyCAGR =
+    years != null && years > 0
+      ? (Math.pow(1 + totalReturn, 1 / years) - 1) * 100
+      : totalReturn * 100;
+  const strategyCagrRounded = Number.isFinite(strategyCAGR)
+    ? Number(strategyCAGR.toFixed(2))
+    : 0;
+  return {
+    strategyCAGR: strategyCagrRounded,
+    btcCAGR: 0,
+    excessReturn: strategyCagrRounded,
+    informationRatio: 0,
+    correlationToBTC: null,
+    interpretation: ["Benchmark data unavailable in payload - showing strategy-only fallback."],
+  };
+}
+
 function parseDateToDays(startStr: string, endStr: string): number | null {
   if (!startStr || !endStr) return null;
   const start = new Date(startStr.slice(0, 10));
@@ -712,9 +740,9 @@ export function buildTestResultDataFromUnified(
     usePayloadRisk && payloadRiskObj
       ? { ...payloadRiskObj, riskAnalysisVersion: (payloadRiskObj.riskAnalysisVersion as number) ?? 0 }
       : riskAnalysisBase && riskSource
-      ? { ...(riskAnalysisBase as unknown as Record<string, unknown>), source: riskSource, riskAnalysisVersion: 1 }
+      ? { ...(riskAnalysisBase as unknown as Record<string, unknown>), source: riskSource, riskAnalysisVersion: 0 }
       : riskAnalysisBase != null
-      ? { ...(riskAnalysisBase as unknown as Record<string, unknown>), riskAnalysisVersion: 1 }
+      ? { ...(riskAnalysisBase as unknown as Record<string, unknown>), riskAnalysisVersion: 0 }
       : null;
   if (typeof process !== "undefined" && process.env?.NODE_ENV !== "test") {
     const source = hasOosTrades ? "oos_trades" : (oosMetrics ? oosMetrics.source : "empty");
@@ -954,7 +982,10 @@ export function buildTestResultDataFromUnified(
     NA;
 
   const benchmarkComparison = (() => {
-    const bc = unifiedPayload.benchmarkComparison;
+    const bc =
+      unifiedPayload.benchmarkComparison ??
+      (unifiedPayload.proBenchmarkMetrics as Record<string, unknown> | undefined)?.benchmarkComparison ??
+      ((unifiedPayload.backtestResult as Record<string, unknown> | undefined)?.benchmarkComparison);
     const valid = validBenchmarkComparison(bc);
     if (bc != null && !valid) {
       engineWarn(
@@ -965,7 +996,12 @@ export function buildTestResultDataFromUnified(
         Array.isArray((bc as Record<string, unknown>)?.interpretation),
       );
     }
-    if (!valid || bc == null) return null;
+    if (!valid || bc == null) {
+      return buildFallbackBenchmarkComparison(unifiedPayload as Record<string, unknown>, {
+        testPeriodStart: dateFromPayload || NA,
+        testPeriodEnd: dateToPayload || NA,
+      });
+    }
     const bcObj = bc as Record<string, unknown>;
     const out = { ...bcObj } as TestResultData["benchmarkComparison"];
     const s = (out as Record<string, unknown>).strategyCAGR as number | undefined;

@@ -233,6 +233,8 @@ export function ReportBlocksView({ lite }: { lite: TestResultDataLite }) {
   const pro = asObj(lite.proBenchmarkMetrics);
   const wfa = asObj(lite.walkForwardAnalysis);
   const sens = asObj(lite.parameterSensitivity);
+  const deploymentStatusGlobal = str(sens?.deploymentStatus);
+  const deploymentRejectedGlobal = /REJECT|FAIL/i.test(deploymentStatusGlobal || "");
   const turnover = asObj(lite.turnoverAndCostDrag);
   const risk = asObj(lite.riskAnalysis);
   const actionPlan = asObj(lite.strategyActionPlan);
@@ -370,13 +372,16 @@ export function ReportBlocksView({ lite }: { lite: TestResultDataLite }) {
             {robustRows.map((r) => {
               const v = typeof r.value === "number" ? Math.round(r.value) : null;
               const isBlocked = v != null && v <= 0;
+              const isStabilityRow = r.key === "stability";
               const tone = scoreTone(v);
+              const effectiveTone =
+                isStabilityRow && deploymentRejectedGlobal && tone === "good" ? "warn" : tone;
               const weight =
                 r.key === "validation" ? 40 : r.key === "risk" ? 30 : r.key === "stability" ? 20 : r.key === "execution" ? 10 : 0;
               const barClass =
-                tone === "good"
+                effectiveTone === "good"
                   ? "text-emerald-400"
-                  : tone === "warn"
+                  : effectiveTone === "warn"
                     ? "text-amber-300"
                     : "text-rose-400";
               return (
@@ -389,6 +394,14 @@ export function ReportBlocksView({ lite }: { lite: TestResultDataLite }) {
                 >
                   <p className="font-medium text-foreground">
                     {r.label} <span className="text-muted-foreground">({weight}%)</span>
+                    {isStabilityRow ? (
+                      <span
+                        className="ml-1 cursor-help text-[10px] text-muted-foreground underline decoration-dotted"
+                        title="Advisory metric: Parameter Stability reflects local sensitivity behavior and does not override deployment gates (Performance Decay, Risk Class, hard blockers)."
+                      >
+                        [?]
+                      </span>
+                    ) : null}
                     {isBlocked ? <span className="font-semibold text-rose-400"> (blocking)</span> : null}
                   </p>
                   <div className="flex items-center gap-2">
@@ -398,7 +411,9 @@ export function ReportBlocksView({ lite }: { lite: TestResultDataLite }) {
                   <p className={"leading-tight " + (isBlocked ? "font-medium text-rose-400" : "text-muted-foreground")}>
                     {isBlocked
                       ? "→ BLOCKED"
-                      : r.key === "stability"
+                      : isStabilityRow && deploymentRejectedGlobal
+                        ? "→ Parameters stable in isolation, but deployment is blocked by audit gates"
+                        : r.key === "stability"
                         ? "→ Parameters stable across sensitivity tests"
                         : "→ Within threshold"}
                   </p>
@@ -748,16 +763,28 @@ export function ReportBlocksView({ lite }: { lite: TestResultDataLite }) {
                     const row = asObj(p);
                     const sensitivity = num(row?.sensitivity);
                     const status = str(row?.status) || (sensitivity != null && sensitivity >= 0.6 ? "Fragile" : "Stable");
+                    const topology =
+                      str(row?.topology) ||
+                      str(row?.displayLabel) ||
+                      (sensitivity == null
+                        ? "n/a"
+                        : sensitivity >= 0.6
+                          ? "Sharp peak"
+                          : sensitivity >= 0.4
+                            ? "Moderate"
+                            : "Flat");
                     const statusCls =
                       /FRAGILE|HIGH/i.test(status) ? "text-rose-400" : /TUNING|MODERATE/i.test(status) ? "text-amber-300" : "text-emerald-400";
+                    const statusIcon =
+                      /FRAGILE|HIGH/i.test(status) ? "🔴" : /TUNING|MODERATE/i.test(status) ? "🟡" : "🟢";
                     return (
                       <div key={idx} className="space-y-1">
                         <div className="grid grid-cols-[minmax(120px,1fr)_70px_64px_80px_100px] items-center gap-3">
                           <div className="truncate">{str(row?.name) || `param_${idx + 1}`}</div>
                           <div className="text-right">{str(row?.optimal) || num(row?.optimal) || "n/a"}</div>
-                          <div className="text-right text-muted-foreground">~</div>
+                          <div className="text-right text-muted-foreground">{topology}</div>
                           <div className="text-right">{asNum(sensitivity, 2)}</div>
-                          <div className={"text-right font-semibold " + statusCls}>🟢 {status}</div>
+                          <div className={"text-right font-semibold " + statusCls}>{statusIcon} {status}</div>
                         </div>
                         <div className="text-xs text-muted-foreground">Suggested Mitigation: {str(row?.mitigation) || "Risk Neutral"}</div>
                       </div>
@@ -794,9 +821,24 @@ export function ReportBlocksView({ lite }: { lite: TestResultDataLite }) {
 
             <div className="space-y-2 border-t border-dashed border-border pt-2 text-xs">
               <p className="font-semibold">AUDIT VERDICT</p>
+              {(() => {
+                const deploymentStatus = str(sens.deploymentStatus) || "APPROVED (no Decay check)";
+                const deploymentCls = /REJECT|FAIL/i.test(deploymentStatus)
+                  ? "text-rose-400"
+                  : /HOLD|WARN|CAUTION/i.test(deploymentStatus)
+                    ? "text-amber-300"
+                    : "text-emerald-400";
+                const riskClass = str(sens.riskClass) || "LOW";
+                const riskClassCls = /HIGH|REJECT|FAIL/i.test(riskClass)
+                  ? "text-rose-400"
+                  : /MODERATE|WARN|CAUTION/i.test(riskClass)
+                    ? "text-amber-300"
+                    : "text-emerald-400";
+                return (
+                  <>
               <p className="text-muted-foreground">
                 Deployment Status:{" "}
-                <span className="font-semibold text-emerald-400">{str(sens.deploymentStatus) || "APPROVED (no Decay check)"}</span>
+                <span className={"font-semibold " + deploymentCls}>{deploymentStatus}</span>
               </p>
               <p className="text-amber-300">Performance Decay: {str(sens.performanceDecayNote) || "n/a (min 3 periods required for decay check)."}</p>
               <p className="text-muted-foreground">
@@ -804,11 +846,14 @@ export function ReportBlocksView({ lite }: { lite: TestResultDataLite }) {
                 <span className="text-muted-foreground/90">
                   {str(sens.riskScoreFormula) || `Base ${num(sens.baseScore) ?? DISPLAY_NA} - Penalty ${num(sens.penalty) ?? DISPLAY_NA} ->`}
                 </span>{" "}
-                <span className="font-semibold text-emerald-400">
-                  {str(sens.riskClass) || "LOW"} ({num(sens.riskScore) ?? DISPLAY_NA}/100)
+                <span className={"font-semibold " + riskClassCls}>
+                  {riskClass} ({num(sens.riskScore) ?? DISPLAY_NA}/100)
                 </span>
               </p>
               <p className="text-muted-foreground">Pro-Note: {str(sens.proNote) || "Highest sensitivity parameter shown in table."}</p>
+                  </>
+                );
+              })()}
             </div>
           </AnalysisBlockCardLite>
       ) : null}
