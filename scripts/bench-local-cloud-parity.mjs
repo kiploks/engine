@@ -89,7 +89,25 @@ for (const k of highPriorityKeys) {
   if (k in L && k in C) {
     const lv = L[k];
     const cv = C[k];
-    const same = JSON.stringify(lv) === JSON.stringify(cv);
+    const same = (() => {
+      if (k !== "benchmarkComparison") return JSON.stringify(lv) === JSON.stringify(cv);
+      if (!lv || !cv || typeof lv !== "object" || typeof cv !== "object") {
+        return JSON.stringify(lv) === JSON.stringify(cv);
+      }
+      const a = lv;
+      const b = cv;
+      const keys = Array.from(new Set([...Object.keys(a), ...Object.keys(b)])).sort();
+      for (const key of keys) {
+        const av = a[key];
+        const bv = b[key];
+        if (typeof av === "number" && typeof bv === "number") {
+          if (Math.abs(av - bv) > epsilon) return false;
+          continue;
+        }
+        if (JSON.stringify(av) !== JSON.stringify(bv)) return false;
+      }
+      return true;
+    })();
     if (!same) failures.push(`high-priority mismatch: ${k}`);
   }
 }

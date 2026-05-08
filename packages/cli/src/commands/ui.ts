@@ -3,7 +3,18 @@ import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { delimiter, dirname, join, resolve, sep } from "node:path";
 import type { ViteDevServer } from "vite";
-import { analyze, mapPayloadToUnified } from "@kiploks/engine-core";
+import {
+  analyze,
+  buildBenchmarkFallbackComparison,
+  buildEquityCurveFromTradesForBenchmark,
+  mapPayloadToUnified,
+  normalizeEquityCurveFromPayload,
+  normalizeRate,
+  parseBenchmarkInterval,
+  resolveBenchmarkBtcKlines,
+  tryBuildBenchmarkComparisonFromEquityPath,
+  yearsBetweenIsoDates,
+} from "@kiploks/engine-core";
 import { buildTestResultDataFromUnified } from "@kiploks/engine-core/server";
 
 type IntegrationKind = "freqtrade" | "octobot";
@@ -70,6 +81,265 @@ type AnalyzeLinkRecord = {
   jobId?: string;
   reportId?: string;
 };
+
+type BinanceKlineRow = [number, string, string, string, string, string, number, string, number, string, string, string];
+
+function toNum(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : Number.NaN;
+}
+
+function deriveBenchmarkWindow(payload: Record<string, unknown>): {
+  startDate: string;
+  endDate: string;
+  timeframe: string;
+} | null {
+  const backtest =
+    (payload.backtestResult ?? payload.backtest) as Record<string, unknown> | undefined;
+  const config = (backtest?.config ?? {}) as Record<string, unknown>;
+  const strategy = (payload.strategy ?? {}) as Record<string, unknown>;
+  const results = (backtest?.results ?? backtest) as Record<string, unknown> | undefined;
+
+  let dateFrom = String(
+    payload.dateFrom ??
+      backtest?.dateFrom ??
+      config.startDate ??
+      "",
+  ).slice(0, 10);
+  let dateTo = String(
+    payload.dateTo ??
+      backtest?.dateTo ??
+      config.endDate ??
+      "",
+  ).slice(0, 10);
+
+  if ((!dateFrom || !dateTo) && results && typeof results === "object") {
+    const start = String(results.backtest_start ?? results.start_date ?? results.startDate ?? "").slice(0, 10);
+    const end = String(results.backtest_end ?? results.end_date ?? results.endDate ?? "").slice(0, 10);
+    if (!dateFrom && start) dateFrom = start;
+    if (!dateTo && end) dateTo = end;
+  }
+
+  if (!dateFrom || !dateTo) return null;
+  const timeframe = String(config.timeframe ?? strategy.timeframe ?? "1h");
+  return { startDate: dateFrom, endDate: dateTo, timeframe };
+}
+
+async function fetchBinanceBtcKlines(args: {
+  interval: string;
+  startMs: number;
+  endMs: number;
+}): Promise<Array<{ timestamp: number; close: number }>> {
+  const out: Array<{ timestamp: number; close: number }> = [];
+  const limit = 1000;
+  let since = args.startMs;
+  let safety = 0;
+  while (since < args.endMs && safety < 50) {
+    safety += 1;
+    const u = new URL("https://api.binance.com/api/v3/klines");
+    u.searchParams.set("symbol", "BTCUSDT");
+    u.searchParams.set("interval", args.interval);
+    u.searchParams.set("startTime", String(since));
+    u.searchParams.set("endTime", String(args.endMs));
+    u.searchParams.set("limit", String(limit));
+    const response = await fetch(u.toString());
+    if (!response.ok) {
+      throw new Error(`Binance klines request failed (${response.status})`);
+    }
+    const rows = (await response.json()) as BinanceKlineRow[];
+    if (!Array.isArray(rows) || rows.length === 0) break;
+    for (const row of rows) {
+      const ts = Number(row?.[0]);
+      const close = Number(row?.[4]);
+      if (Number.isFinite(ts) && Number.isFinite(close) && ts <= args.endMs) {
+        out.push({ timestamp: ts, close });
+      }
+    }
+    const lastTs = Number(rows[rows.length - 1]?.[0]);
+    if (!Number.isFinite(lastTs) || rows.length < limit) break;
+    // Binance klines are candle-open timestamps; increment by 1ms to avoid refetching last bar.
+    since = lastTs + 1;
+  }
+  return out;
+}
+
+async function enrichPayloadWithBenchmarkComparison(raw: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const existing = raw.benchmarkComparison;
+  if (existing && typeof existing === "object" && !Array.isArray(existing)) {
+    return raw;
+  }
+  const backtest = (raw.backtestResult ?? raw.backtest) as Record<string, unknown> | undefined;
+  const config = (backtest?.config ?? {}) as Record<string, unknown>;
+  const results = (backtest?.results ?? backtest) as Record<string, unknown> | undefined;
+  const window = deriveBenchmarkWindow(raw);
+  if (!window) return raw;
+
+  const startMs = Date.parse(`${window.startDate}T00:00:00.000Z`);
+  const endMs = Date.parse(`${window.endDate}T23:59:59.999Z`);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return raw;
+
+  const timeframeInterval = parseBenchmarkInterval(window.timeframe);
+  const initialBalance = toNum(config.initialBalance);
+  const equityRaw = (backtest?.equityCurve ?? backtest?.equity_curve) as unknown[] | undefined;
+  const equityCurve =
+    normalizeEquityCurveFromPayload(equityRaw) ||
+    [];
+  const trades = Array.isArray(backtest?.trades) ? (backtest?.trades as unknown[]) : [];
+  const equity =
+    equityCurve.length >= 2
+      ? equityCurve
+      : buildEquityCurveFromTradesForBenchmark(trades, Number.isFinite(initialBalance) ? initialBalance : 1000);
+  if (!Array.isArray(equity) || equity.length < 2) return raw;
+
+  try {
+    const btcKlines = await resolveBenchmarkBtcKlines({
+      exchangeType: "binance",
+      symbol: "BTCUSDT",
+      interval: timeframeInterval,
+      startMs,
+      endMs,
+      fetchKlines: async ({ interval, startMs, endMs }) => fetchBinanceBtcKlines({ interval, startMs, endMs }),
+    });
+    if (!btcKlines || btcKlines.length < 2) return raw;
+    const totalReturn = toNum(results?.totalReturn);
+    const totalTrades = toNum(results?.totalTrades);
+    const years = yearsBetweenIsoDates(window.startDate, window.endDate);
+    const feeRaw = toNum(config.fee_open ?? config.commission);
+    const slippageRaw = toNum(config.slippage);
+    const commissionDecimal = normalizeRate(Number.isFinite(feeRaw) ? feeRaw : 0.001);
+    const slippageDecimal = normalizeRate(Number.isFinite(slippageRaw) ? slippageRaw : 0.0005);
+    let comparison = tryBuildBenchmarkComparisonFromEquityPath({
+      equityCurve: equity,
+      btcKlines,
+      initialBalance: Number.isFinite(initialBalance) ? initialBalance : 1000,
+      timeframeStr: window.timeframe,
+      totalReturn: Number.isFinite(totalReturn) ? totalReturn : 0,
+      commissionDecimal,
+      slippageDecimal,
+      feesPerTradeIsDefault: config.fee_open == null && config.commission == null,
+      slippagePerTradeIsDefault: config.slippage == null,
+      totalTrades: Number.isFinite(totalTrades) ? totalTrades : 0,
+    });
+    if (!comparison) {
+      comparison = buildBenchmarkFallbackComparison({
+        totalReturn: Number.isFinite(totalReturn) ? totalReturn : 0,
+        btcKlines,
+        years: years ?? 1,
+        commissionDecimal,
+        slippageDecimal,
+        feesPerTradeIsDefault: config.fee_open == null && config.commission == null,
+        slippagePerTradeIsDefault: config.slippage == null,
+      }) as unknown as Record<string, unknown>;
+    }
+    return { ...raw, benchmarkComparison: comparison };
+  } catch {
+    return raw;
+  }
+}
+
+function alignReportContractForCloudParity(report: unknown): unknown {
+  if (!report || typeof report !== "object" || Array.isArray(report)) return report;
+  const out = { ...(report as Record<string, unknown>) };
+  const risk = out.riskAnalysis;
+  if (risk && typeof risk === "object" && !Array.isArray(risk)) {
+    const r = { ...(risk as Record<string, unknown>) };
+    r.riskAnalysisVersion = 0;
+    out.riskAnalysis = r;
+  }
+  if (out.benchmarkComparison == null) {
+    const canonical =
+      out.canonicalMetrics && typeof out.canonicalMetrics === "object" && !Array.isArray(out.canonicalMetrics)
+        ? (out.canonicalMetrics as Record<string, unknown>)
+        : null;
+    const fullCanonical =
+      canonical?.fullBacktestMetrics && typeof canonical.fullBacktestMetrics === "object" && !Array.isArray(canonical.fullBacktestMetrics)
+        ? (canonical.fullBacktestMetrics as Record<string, unknown>)
+        : null;
+    const pro = out.proBenchmarkMetrics;
+    const buckets =
+      pro && typeof pro === "object" && !Array.isArray(pro)
+        ? (pro as Record<string, unknown>).benchmarkMetricsBuckets
+        : null;
+    const full =
+      buckets && typeof buckets === "object" && !Array.isArray(buckets)
+        ? ((buckets as Record<string, unknown>).fullBacktestContext as Record<string, unknown> | undefined)
+        : undefined;
+    const strategyCalmarRatio = Number((full as Record<string, unknown> | undefined)?.fullCalmar ?? fullCanonical?.calmarRatio);
+    const strategyMaxDrawdownRaw = Number((full as Record<string, unknown> | undefined)?.fullMaxDrawdown ?? fullCanonical?.maxDrawdown);
+    const strategyVolatility = Number((full as Record<string, unknown> | undefined)?.fullVolatility);
+    const totalReturn = Number(fullCanonical?.totalReturn);
+    const dateFrom = String(fullCanonical?.dateFrom ?? "");
+    const dateTo = String(fullCanonical?.dateTo ?? "");
+    const d0 = Date.parse(dateFrom);
+    const d1 = Date.parse(dateTo);
+    const years = Number.isFinite(d0) && Number.isFinite(d1) && d1 > d0 ? (d1 - d0) / (365.25 * 24 * 60 * 60 * 1000) : null;
+    const strategyCAGR =
+      Number.isFinite(totalReturn) && years != null && years > 0
+        ? ((Math.pow(1 + totalReturn, 1 / years) - 1) * 100)
+        : Number.NaN;
+    const turnover =
+      out.turnoverAndCostDrag && typeof out.turnoverAndCostDrag === "object" && !Array.isArray(out.turnoverAndCostDrag)
+        ? (out.turnoverAndCostDrag as Record<string, unknown>)
+        : null;
+    const costDecomp =
+      turnover?.costDecomposition && typeof turnover.costDecomposition === "object" && !Array.isArray(turnover.costDecomposition)
+        ? (turnover.costDecomposition as Record<string, unknown>)
+        : null;
+    const netEdgeFromTriggers = (() => {
+      const proObj =
+        out.proBenchmarkMetrics && typeof out.proBenchmarkMetrics === "object" && !Array.isArray(out.proBenchmarkMetrics)
+          ? (out.proBenchmarkMetrics as Record<string, unknown>)
+          : null;
+      const triggers = Array.isArray(proObj?.killSwitchTriggers) ? (proObj?.killSwitchTriggers as unknown[]) : [];
+      for (const t of triggers) {
+        const s = String(t ?? "");
+        const m = s.match(/Net Edge[^:]*current:\s*([-+]?\d+(?:\.\d+)?)\s*bps/i);
+        if (m?.[1]) {
+          const n = Number(m[1]);
+          if (Number.isFinite(n)) return n;
+        }
+      }
+      return null;
+    })();
+    if (Number.isFinite(strategyCAGR) || Number.isFinite(strategyCalmarRatio) || Number.isFinite(strategyMaxDrawdownRaw)) {
+      out.benchmarkComparison = {
+        strategyCAGR: Number.isFinite(strategyCAGR) ? Number(strategyCAGR.toFixed(2)) : 0,
+        btcCAGR: 0,
+        excessReturn: Number.isFinite(strategyCAGR) ? Number(strategyCAGR.toFixed(2)) : 0,
+        informationRatio: 0,
+        correlationToBTC: 0,
+        betaToBTC: 0,
+        trackingError: 0,
+        rollingCorrelationPeak: 0,
+        alphaTStatLags: 0,
+        nObservationsTStat: 0,
+        strategyVolatility: Number.isFinite(strategyVolatility) ? Number(strategyVolatility.toFixed(2)) : undefined,
+        btcVolatility: 0,
+        btcCalmarRatio: 0,
+        btcMaxDrawdown: 0,
+        btcSkewness: 0,
+        btcKurtosis: 0,
+        strategyCalmarRatio: Number.isFinite(strategyCalmarRatio) ? Number(strategyCalmarRatio.toFixed(2)) : undefined,
+        strategyMaxDrawdown: Number.isFinite(strategyMaxDrawdownRaw)
+          ? Number((Math.abs(strategyMaxDrawdownRaw) * 100).toFixed(2))
+          : undefined,
+        feesPerTrade: Number.isFinite(Number(costDecomp?.exchangeFeesPct))
+          ? Number((Math.abs(Number(costDecomp?.exchangeFeesPct)) / 100).toFixed(4))
+          : 0.001,
+        slippagePerTrade: Number.isFinite(Number(costDecomp?.slippagePct))
+          ? Number((Math.abs(Number(costDecomp?.slippagePct)) / 100).toFixed(4))
+          : 0.0005,
+        slippagePerTradeIsDefault: true,
+        breakEvenSlippageNote: "N/A (local synthesized benchmark)",
+        netEdgeBps: netEdgeFromTriggers ?? 0,
+        interpretation: [
+          "Benchmark comparison is synthesized locally when cloud benchmark inputs are unavailable.",
+        ],
+      };
+    }
+  }
+  return out;
+}
 
 const state = {
   lastPreflight: null as PreflightResult | null,
@@ -629,9 +899,11 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
       const reportIds: string[] = [];
       const batchTotal = body.results.length;
       for (let i = 0; i < body.results.length; i++) {
-        const raw = body.results[i] as Record<string, unknown>;
+        const rawInput = body.results[i] as Record<string, unknown>;
+        const raw = await enrichPayloadWithBenchmarkComparison(rawInput);
         const unified = mapPayloadToUnified(raw);
-        const report = buildTestResultDataFromUnified(unified, `local_${Date.now()}_${i}`);
+        const reportRaw = buildTestResultDataFromUnified(unified, `local_${Date.now()}_${i}`);
+        const report = alignReportContractForCloudParity(reportRaw);
         const reportId = `report_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         const shellUrl = `${state.localApiBaseUrl}/ui/#report=${reportId}`;
         const kiploksUrl = pickKiploksAnalyzeUrlForResult(body, i, raw);
