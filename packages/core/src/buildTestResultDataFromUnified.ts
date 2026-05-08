@@ -998,8 +998,8 @@ export function buildTestResultDataFromUnified(
     }
     if (!valid || bc == null) {
       return buildFallbackBenchmarkComparison(unifiedPayload as Record<string, unknown>, {
-        testPeriodStart: strategy.testPeriodStart,
-        testPeriodEnd: strategy.testPeriodEnd,
+        testPeriodStart: dateFromPayload || NA,
+        testPeriodEnd: dateToPayload || NA,
       });
     }
     const bcObj = bc as Record<string, unknown>;
