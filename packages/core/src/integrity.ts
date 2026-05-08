@@ -96,7 +96,13 @@ export function runIntegrityJudge(
       retForRule3 != null &&
       retForRule3 > 0
     ) {
-      pushIssue(issues, "error", "Execution Warning: Profit with negative expected edge (Luck Factor).");
+      /**
+       * Single-window + low-N can legitimately show positive return with negative expected edge.
+       * Keep this as warning for research contexts; escalate to error only with adequate sample.
+       */
+      const luckFactorSeverity: IntegrityIssueSeverity =
+        totalTrades >= MIN_TRADES_FOR_SIGNIFICANCE ? "error" : "warning";
+      pushIssue(issues, luckFactorSeverity, "Execution Warning: Profit with negative expected edge (Luck Factor).");
     }
   }
 
@@ -169,6 +175,6 @@ export function runIntegrityJudge(
 
   return {
     issues,
-    isValid: issues.length === 0,
+    isValid: !issues.some((i) => i.severity === "error"),
   };
 }

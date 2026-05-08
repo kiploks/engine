@@ -9,6 +9,51 @@ import type {
 } from "@kiploks/engine-contracts";
 import { toDecimalReturn } from "./normalize";
 
+function toFiniteNumber(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() && Number.isFinite(Number(v))) return Number(v);
+  return null;
+}
+
+function normalizePeriodReturnValue(
+  primaryRaw: unknown,
+  metricsRaw: unknown,
+): number {
+  const primaryNum = toFiniteNumber(primaryRaw);
+  const metricsNum = toFiniteNumber(metricsRaw);
+  const primaryNorm = toDecimalReturn(primaryNum);
+  const metricsNorm = toDecimalReturn(metricsNum);
+
+  if (Number.isFinite(primaryNorm) && Number.isFinite(metricsNorm)) {
+    /**
+     * Prefer metrics return when it is materially larger than shorthand return.
+     * This aligns local integration payloads with cloud snapshots where metrics.*.totalReturn
+     * can contain the canonical period return while shorthand fields are reduced.
+     */
+    if (Math.abs(metricsNorm) >= Math.max(0.1, Math.abs(primaryNorm) * 10)) {
+      return metricsNorm;
+    }
+    /**
+     * Ambiguous zone: values in (1,5] can be either 1-5% or 100-500% decimal return.
+     * If shorthand value is tiny and metrics value is much larger, keep metrics as decimal.
+     */
+    if (
+      metricsNum != null &&
+      Math.abs(metricsNum) > 1 &&
+      Math.abs(metricsNum) <= 5 &&
+      Math.abs(primaryNorm) < 0.05 &&
+      Math.abs(metricsNum) >= Math.max(0.5, Math.abs(primaryNorm) * 20)
+    ) {
+      return metricsNum;
+    }
+    return primaryNorm;
+  }
+
+  if (Number.isFinite(primaryNorm)) return primaryNorm;
+  if (Number.isFinite(metricsNorm)) return metricsNorm;
+  return Number.NaN;
+}
+
 /**
  * Normalizes a payload (e.g. Freqtrade or generic integration) so downstream logic
  * receives canonical keys and decimal returns.
@@ -73,8 +118,14 @@ export function mapPayloadToUnified(
           (val && typeof val === "object" ? (val.totalReturn ?? val.total) : undefined);
         return {
           ...rec,
-          optimizationReturn: toDecimalReturn(rawOpt),
-          validationReturn: toDecimalReturn(rawVal),
+          optimizationReturn: normalizePeriodReturnValue(
+            rec.optimizationReturn ?? rec.optimization_return,
+            opt && typeof opt === "object" ? (opt.totalReturn ?? opt.total) : undefined,
+          ),
+          validationReturn: normalizePeriodReturnValue(
+            rec.validationReturn ?? rec.validation_return,
+            val && typeof val === "object" ? (val.totalReturn ?? val.total) : undefined,
+          ),
         };
       });
       const key = wfa.periods ? "periods" : "windows";
