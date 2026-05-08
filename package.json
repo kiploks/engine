@@ -1,7 +1,7 @@
 {
   "name": "@kiploks/engine-monorepo",
   "private": true,
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Kiploks Open Core engine - npm packages: contracts, core, adapters, CLI, test vectors. This folder is the git root of the published engine repository.",
   "keywords": [
     "algorithmic-trading",

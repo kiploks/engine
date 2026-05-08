@@ -1,6 +1,6 @@
 {
   "name": "@kiploks/engine-core",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "publishConfig": {
     "access": "public"
   },
@@ -69,7 +69,7 @@
     "postpack": "node ../../scripts/engine-core-prepack.mjs restore"
   },
   "dependencies": {
-    "@kiploks/engine-contracts": "0.4.2"
+    "@kiploks/engine-contracts": "0.4.3"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

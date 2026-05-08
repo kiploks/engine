@@ -3,7 +3,7 @@
  * Keep these exports stable across minor releases.
  */
 
-export const ENGINE_VERSION = "0.4.2";
+export const ENGINE_VERSION = "0.4.3";
 export const ANALYSIS_ENGINE_VERSION = "3.0";
 export const FORMULA_VERSION = "2.2.0";
 export const RISK_ANALYSIS_VERSION = 1;

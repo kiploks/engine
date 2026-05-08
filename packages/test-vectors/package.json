@@ -1,6 +1,6 @@
 {
   "name": "@kiploks/engine-test-vectors",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "publishConfig": {
     "access": "public"
   },

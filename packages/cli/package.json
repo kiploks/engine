@@ -1,6 +1,6 @@
 {
   "name": "@kiploks/engine-cli",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "publishConfig": {
     "access": "public"
   },
@@ -56,9 +56,9 @@
   },
   "dependencies": {
     "@dedalik/use-react": "^1.1.1",
-    "@kiploks/engine-adapters": "0.4.2",
-    "@kiploks/engine-contracts": "0.4.2",
-    "@kiploks/engine-core": "0.4.2",
+    "@kiploks/engine-adapters": "0.4.3",
+    "@kiploks/engine-contracts": "0.4.3",
+    "@kiploks/engine-core": "0.4.3",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.12",
