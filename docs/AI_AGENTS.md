@@ -87,8 +87,8 @@ If integration upload needs Bearer auth, set in MCP env:
 ```mermaid
 flowchart LR
   Agent[AI Agent]
-  MCP[@kiploks/engine-mcp]
-  Core[@kiploks/engine-core]
+  MCP["engine-mcp"]
+  Core["engine-core"]
   Orch[kiploks ui orchestrator]
   Bridge[kiploks-freqtrade run.py]
   Agent --> MCP
