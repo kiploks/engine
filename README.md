@@ -244,29 +244,99 @@ Details: [`docs/BOT_INTEGRATIONS.md`](docs/BOT_INTEGRATIONS.md)
 
 ## Packages
 
-| Package                     | Role                                                                                                                                      |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `@kiploks/engine-core`      | `analyze()`, `analyzeFromTrades()`, `analyzeFromWindows()`, `buildPathMonteCarloSimulation()`, `runProfessionalWfa()`                   |
-| `@kiploks/engine-contracts` | Versioned TypeScript types and constants. Import these for type safety in your own code.                                                  |
-| `@kiploks/engine-adapters`  | `csvToTrades` / streaming CSV to `Trade[]` (Freqtrade-shaped **JSON** is not parsed here; map to `Trade[]` in your layer).                |
-| `@kiploks/engine-cli`       | `npx kiploks analyze` - run analysis from JSON file, upload to cloud, run conformance tests                                              |
-| `@kiploks/engine-test-vectors` | Golden JSON fixtures for regression tests                                                                                             |
+| Package | Role |
+| --- | --- |
+| `@kiploks/engine-core` | `analyze()`, WFA, Monte Carlo, professional report |
+| `@kiploks/engine-contracts` | Versioned TypeScript types |
+| `@kiploks/engine-adapters` | CSV to `Trade[]` |
+| `@kiploks/engine-cli` | CLI + local UI orchestrator |
+| `@kiploks/engine-mcp` | MCP server for AI agents |
+| `@kiploks/engine-test-vectors` | Golden fixtures for regression tests |
+
+---
+
+## AI agents (MCP)
+
+Use `@kiploks/engine-mcp` so Cursor, Claude Desktop, or any MCP client can analyze backtests and fetch reports locally - no cloud account required.
+
+### 1. Add MCP server
+
+**Cursor** (Settings -> MCP or `.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "kiploks": {
+      "command": "npx",
+      "args": ["-y", "@kiploks/engine-mcp"],
+      "env": {
+        "KIPLOKS_ORCHESTRATOR_URL": "http://127.0.0.1:41731"
+      }
+    }
+  }
+}
+```
+
+From a repo checkout after `npm run build -w @kiploks/engine-mcp`:
+
+```json
+{
+  "mcpServers": {
+    "kiploks": {
+      "command": "node",
+      "args": ["packages/mcp-server/dist/index.js"]
+    }
+  }
+}
+```
+
+### 2. Analyze trades (no UI)
+
+Ask your agent to call `kiploks_analyze_trades` with a CSV or JSON `Trade[]` file.
+
+Or use CLI:
+
+```bash
+npx kiploks analyze-trades ./trades.json --json \
+  --in-sample-months 6 --out-of-sample-months 2 --step rolling
+```
+
+### 3. Freqtrade backtests (with UI)
+
+Start the local orchestrator:
+
+```bash
+npx -y @kiploks/engine-cli ui --no-open
+```
+
+Typical agent flow:
+
+1. `kiploks_orchestrator_status`
+2. `kiploks_register_freqtrade_path` with your Freqtrade install path
+3. `kiploks_bootstrap_integration`
+4. `kiploks_list_backtests`
+5. `kiploks_run_backtest_analysis` with `selected_artifact_keys`
+6. `kiploks_get_report` -> open `{orchestrator_url}/ui/#report={id}`
+
+If integration routes return `401`, set `KIPLOKS_ORCHESTRATOR_TOKEN` from `kiploks-freqtrade/kiploks.json` (`api_token`).
+
+Full guide: [`docs/AI_AGENTS.md`](docs/AI_AGENTS.md)
 
 ---
 
 ## Documentation
 
-| Topic                                      | Link                                                                                    |
-| ------------------------------------------ | --------------------------------------------------------------------------------------- |
-| **Which function to call** (start here)    | [`docs/ENTRYPOINTS.md`](docs/ENTRYPOINTS.md)                                            |
-| WFA methodology                            | [`docs/WFA_PROFESSIONAL.md`](docs/WFA_PROFESSIONAL.md)                                  |
-| Path Monte Carlo                           | [`docs/MONTE_CARLO_PATH.md`](docs/MONTE_CARLO_PATH.md)                                  |
-| Freqtrade / OctoBot (separate Python repos) | [`docs/BOT_INTEGRATIONS.md`](docs/BOT_INTEGRATIONS.md)                                 |
-| Reproducibility and hashes                 | [`docs/OPEN_CORE_REPRODUCIBILITY.md`](docs/OPEN_CORE_REPRODUCIBILITY.md)                  |
-| Error catalog                              | [`docs/ERROR_CATALOG.md`](docs/ERROR_CATALOG.md)                                        |
-| Local user guide                           | [`docs/OPEN_CORE_LOCAL_USER_GUIDE.md`](docs/OPEN_CORE_LOCAL_USER_GUIDE.md)               |
-| Examples and output explorer               | [`docs/examples/result-layout-demo.html`](docs/examples/result-layout-demo.html)        |
-| Research articles                          | [kiploks.com/research](https://kiploks.com/research)                                    |
+| Topic | Link |
+| --- | --- |
+| Which function to call | [`docs/ENTRYPOINTS.md`](docs/ENTRYPOINTS.md) |
+| AI agents and MCP | [`docs/AI_AGENTS.md`](docs/AI_AGENTS.md) |
+| WFA methodology | [`docs/WFA_PROFESSIONAL.md`](docs/WFA_PROFESSIONAL.md) |
+| Path Monte Carlo | [`docs/MONTE_CARLO_PATH.md`](docs/MONTE_CARLO_PATH.md) |
+| Freqtrade / OctoBot | [`docs/BOT_INTEGRATIONS.md`](docs/BOT_INTEGRATIONS.md) |
+| Reproducibility | [`docs/OPEN_CORE_REPRODUCIBILITY.md`](docs/OPEN_CORE_REPRODUCIBILITY.md) |
+| Error catalog | [`docs/ERROR_CATALOG.md`](docs/ERROR_CATALOG.md) |
+| Local user guide | [`docs/OPEN_CORE_LOCAL_USER_GUIDE.md`](docs/OPEN_CORE_LOCAL_USER_GUIDE.md) |
+| Examples | [`docs/examples/result-layout-demo.html`](docs/examples/result-layout-demo.html) |
 
 ---
 

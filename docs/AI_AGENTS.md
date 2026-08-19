@@ -67,7 +67,7 @@ Prerequisites on the user's machine:
 Agent steps:
 
 1. `kiploks_orchestrator_status` - confirm orchestrator is up
-2. `kiploks_register_freqtrade_path` - `canonical_path` = Freqtrade root
+2. `kiploks_register_freqtrade_path` - `path` = Freqtrade root
 3. `kiploks_bootstrap_integration` - clones `kiploks-freqtrade` into that repo
 4. `kiploks_list_backtests` - discover artifacts under `user_data/backtest_results`
 5. `kiploks_run_backtest_analysis` - pass `selected_artifact_keys` from step 4

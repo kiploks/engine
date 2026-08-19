@@ -1,12 +1,11 @@
+import { createReadStream } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { AnalyzeConfig, Trade, WindowConfig } from "@kiploks/engine-contracts";
-import { analyzeFromTrades } from "@kiploks/engine-core";
-import { mapPayloadToUnified } from "@kiploks/engine-core";
-import { buildTestResultDataFromUnified } from "@kiploks/engine-core/server";
 import { csvToTradesFromStream } from "@kiploks/engine-adapters";
-import { createReadStream } from "node:fs";
+import type { AnalyzeConfig, Trade, WindowConfig } from "@kiploks/engine-contracts";
+import { analyzeFromTrades, mapPayloadToUnified } from "@kiploks/engine-core";
+import { buildTestResultDataFromUnified } from "@kiploks/engine-core/server";
 
 export type AnalyzeTradesInput = {
   inputPath: string;
@@ -20,13 +19,13 @@ export type AnalyzeTradesInput = {
 };
 
 function buildConfig(input: AnalyzeTradesInput): AnalyzeConfig {
-  return {
-    ...(typeof input.seed === "number" && Number.isFinite(input.seed) ? { seed: input.seed } : {}),
-    ...(typeof input.decimals === "number" && Number.isFinite(input.decimals) ? { decimals: input.decimals } : {}),
-    ...(typeof input.permutationN === "number" && Number.isFinite(input.permutationN)
-      ? { permutationN: input.permutationN }
-      : {}),
-  };
+  const config: AnalyzeConfig = {};
+  if (typeof input.seed === "number" && Number.isFinite(input.seed)) config.seed = input.seed;
+  if (typeof input.decimals === "number" && Number.isFinite(input.decimals)) config.decimals = input.decimals;
+  if (typeof input.permutationN === "number" && Number.isFinite(input.permutationN)) {
+    config.permutationN = input.permutationN;
+  }
+  return config;
 }
 
 function toWindowConfig(input: AnalyzeTradesInput): WindowConfig {
@@ -35,6 +34,13 @@ function toWindowConfig(input: AnalyzeTradesInput): WindowConfig {
     outOfSampleMonths: input.outOfSampleMonths ?? 2,
     stepMode: input.stepMode ?? "rolling",
   };
+}
+
+function parseProfit(row: Record<string, unknown>, balance: number): number | null {
+  if (Number.isFinite(Number(row.profit))) return Number(row.profit);
+  if (Number.isFinite(Number(row.profit_ratio))) return Number(row.profit_ratio);
+  if (Number.isFinite(Number(row.profit_abs))) return Number(row.profit_abs) / balance;
+  return null;
 }
 
 async function loadTrades(inputPath: string, initialBalance?: number): Promise<Trade[]> {
@@ -49,20 +55,14 @@ async function loadTrades(inputPath: string, initialBalance?: number): Promise<T
 
   const raw = JSON.parse(await readFile(abs, "utf8")) as unknown;
   if (!Array.isArray(raw)) {
-    throw new Error("JSON input must be an array of trades (Trade[]). Bot export JSON is not supported in-tree.");
+    throw new Error("JSON input must be Trade[] array. Bot export JSON is not supported in-tree.");
   }
 
   const balance = initialBalance ?? 1;
   const out: Trade[] = [];
   for (const row of raw as Record<string, unknown>[]) {
     if (!row || typeof row !== "object") continue;
-    const profit = Number.isFinite(Number(row.profit))
-      ? Number(row.profit)
-      : Number.isFinite(Number(row.profit_ratio))
-        ? Number(row.profit_ratio)
-        : Number.isFinite(Number(row.profit_abs))
-          ? Number(row.profit_abs) / balance
-          : null;
+    const profit = parseProfit(row, balance);
     const openTime = Number(row.openTime ?? row.open_timestamp);
     const closeTime = Number(row.closeTime ?? row.close_timestamp);
     if (profit == null || !Number.isFinite(openTime) || !Number.isFinite(closeTime)) continue;
@@ -74,34 +74,22 @@ async function loadTrades(inputPath: string, initialBalance?: number): Promise<T
       ...(typeof row.direction === "string" ? { direction: row.direction as Trade["direction"] } : {}),
     });
   }
-  if (out.length === 0) {
-    throw new Error("No valid trades found in input file");
-  }
+  if (out.length === 0) throw new Error("No valid trades found in input file");
   return out;
 }
 
 export async function analyzeTradesFile(input: AnalyzeTradesInput): Promise<unknown> {
-  const trades = await loadTrades(input.inputPath, input.initialBalance);
-  const windowConfig = toWindowConfig(input);
-  const config = buildConfig(input);
   return analyzeFromTrades(
     {
-      trades,
-      windowConfig,
+      trades: await loadTrades(input.inputPath, input.initialBalance),
+      windowConfig: toWindowConfig(input),
       wfaInputMode: "tradeSlicedPseudoWfa",
     },
-    config,
+    buildConfig(input),
   );
 }
 
 export async function analyzeIntegrationPayloadFile(inputPath: string): Promise<unknown> {
-  const abs = path.resolve(inputPath);
-  const raw = JSON.parse(await readFile(abs, "utf8")) as Record<string, unknown>;
-  const unified = mapPayloadToUnified(raw);
-  return buildTestResultDataFromUnified(unified, `mcp_${Date.now()}`);
-}
-
-export async function analyzeIntegrationPayloadObject(payload: Record<string, unknown>): Promise<unknown> {
-  const unified = mapPayloadToUnified(payload);
-  return buildTestResultDataFromUnified(unified, `mcp_${Date.now()}`);
+  const raw = JSON.parse(await readFile(path.resolve(inputPath), "utf8")) as Record<string, unknown>;
+  return buildTestResultDataFromUnified(mapPayloadToUnified(raw), `mcp_${Date.now()}`);
 }

@@ -128,11 +128,11 @@ export async function waitForJob(
 
 export async function registerFreqtradePath(
   config: OrchestratorConfig,
-  canonicalPath: string,
+  freqtradePath: string,
 ): Promise<unknown> {
   return orchestratorFetch(config, "/paths/register", {
     method: "POST",
-    body: JSON.stringify({ integration: "freqtrade", canonicalPath }),
+    body: JSON.stringify({ integration: "freqtrade", path: freqtradePath }),
   });
 }
 
