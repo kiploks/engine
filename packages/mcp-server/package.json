@@ -1,0 +1,50 @@
+{
+  "name": "@kiploks/engine-mcp",
+  "version": "0.4.3",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kiploks/engine.git"
+  },
+  "homepage": "https://github.com/kiploks/engine#readme",
+  "bugs": {
+    "url": "https://github.com/kiploks/engine/issues"
+  },
+  "description": "MCP server for Kiploks engine - AI agents can analyze backtests and fetch reports",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "algorithmic-trading",
+    "walk-forward-analysis",
+    "backtest",
+    "kiploks",
+    "ai-agent"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "kiploks-mcp": "bin/kiploks-mcp.cjs"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@kiploks/engine-adapters": "0.4.3",
+    "@kiploks/engine-contracts": "0.4.3",
+    "@kiploks/engine-core": "0.4.3",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "license": "Apache-2.0"
+}

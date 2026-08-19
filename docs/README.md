@@ -22,6 +22,7 @@ Authoritative copies of engine-focused guides live **in this folder** so they sh
 | [`OSS_PUBLIC_REPO_SYNC.md`](OSS_PUBLIC_REPO_SYNC.md) | Repository layout, one `VERSION`, `sync-versions`, publish notes |
 | [`RELEASE_CHECKLIST.md`](../RELEASE_CHECKLIST.md) | Pre-release checks (tests, docs vs contracts) |
 | [`BOT_INTEGRATIONS.md`](BOT_INTEGRATIONS.md) | Freqtrade / OctoBot Python integrations (optional path without npm engine) |
+| [`AI_AGENTS.md`](AI_AGENTS.md) | MCP server and agent workflows for backtest analysis |
 | [`MONTE_CARLO_SIMULATION_IMPLEMENTATION.md`](MONTE_CARLO_SIMULATION_IMPLEMENTATION.md) | **Monte Carlo index** - path MC vs professional window bootstrap, links to guides |
 | [`MONTE_CARLO_PATH.md`](MONTE_CARLO_PATH.md) | **Path-based Monte Carlo (user guide)** - `buildPathMonteCarloSimulation`, API, limits, reproducibility |
 

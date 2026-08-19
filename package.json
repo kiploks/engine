@@ -28,7 +28,7 @@
   },
   "scripts": {
     "sync-versions": "node scripts/sync-engine-versions.mjs",
-    "build": "npm run build -w @kiploks/engine-contracts -w @kiploks/engine-core -w @kiploks/engine-adapters -w @kiploks/engine-cli",
+    "build": "npm run build -w @kiploks/engine-contracts -w @kiploks/engine-core -w @kiploks/engine-adapters -w @kiploks/engine-cli -w @kiploks/engine-mcp",
     "ui": "npm run build:code -w @kiploks/engine-cli && npm run ui -w @kiploks/engine-cli",
     "ui:no-open": "npm run build:code -w @kiploks/engine-cli && node packages/cli/dist/index.js ui --watch --no-open",
     "lint": "eslint .",
@@ -40,7 +40,8 @@
     "engine:validate": "npm run lint && npm run test && npm run engine:check:boundary && npm run engine:check:bundle",
     "engine:examples:generate-samples": "node docs/examples/scripts/generate-samples.mjs",
     "engine:examples:generate-monte-carlo-fixture": "node docs/examples/scripts/generate-monte-carlo-seed42.mjs",
-    "engine:publish:dry-run": "npm publish --dry-run -w @kiploks/engine-contracts -w @kiploks/engine-core -w @kiploks/engine-adapters -w @kiploks/engine-cli -w @kiploks/engine-test-vectors"
+    "engine:publish:dry-run": "npm publish --dry-run -w @kiploks/engine-contracts -w @kiploks/engine-core -w @kiploks/engine-adapters -w @kiploks/engine-cli -w @kiploks/engine-mcp -w @kiploks/engine-test-vectors",
+    "mcp:kiploks": "node packages/mcp-server/dist/index.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
