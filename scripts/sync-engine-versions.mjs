@@ -16,6 +16,7 @@ const PACKAGES = [
   "packages/core",
   "packages/adapters",
   "packages/cli",
+  "packages/mcp-server",
   "packages/test-vectors",
 ];
 
